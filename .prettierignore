@@ -1,0 +1,8 @@
+node_modules/
+.local/
+.expo/
+android/
+ios/
+coverage/
+prototypes/
+package-lock.json

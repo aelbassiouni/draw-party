@@ -16,3 +16,9 @@ coverage/
 .local/
 .DS_Store
 Thumbs.db
+
+# Expo generated files
+.expo/
+android/
+ios/
+expo-env.d.ts

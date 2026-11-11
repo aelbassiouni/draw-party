@@ -1,0 +1,16 @@
+const expo = require('eslint-config-expo/flat');
+const prettier = require('eslint-config-prettier/flat');
+module.exports = [
+  ...expo,
+  prettier,
+  {
+    ignores: [
+      '.local/**',
+      '.expo/**',
+      'android/**',
+      'ios/**',
+      'prototypes/**',
+      'coverage/**',
+    ],
+  },
+];
