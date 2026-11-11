@@ -1,0 +1,93 @@
+<!-- Throwaway visual study: paper-and-marker, poster, and minimal layouts. No production app or persistence. -->
+<div id="draw-study">
+  <div class="viz-carousel viz-dotted-background" aria-label="Drawing game design options">
+    <section data-variant="Notebook · recommended"><div class="dp-phone notebook" data-design="notebook" aria-label="Notebook game preview"></div></section>
+    <section data-variant="Party poster" hidden><div class="dp-phone poster" data-design="poster" aria-label="Party poster game preview"></div></section>
+    <section data-variant="Quiet studio" hidden><div class="dp-phone studio" data-design="studio" aria-label="Quiet studio game preview"></div></section>
+  </div>
+</div>
+<style>
+#draw-study { --ink:light-dark(#252a3c,#f4eddf); --paper:light-dark(#fff9ec,#242630); --line:light-dark(#e5decd,#41434d); --soft:light-dark(#efe8d8,#323540); --accent:light-dark(#f9c84b,#f9c84b); --accent-ink:#292719; font-family: 'Segoe UI',Tahoma,sans-serif; }
+#draw-study section[data-variant] {min-height:760px;padding:24px 8px 12px;box-sizing:border-box;}
+#draw-study .dp-phone {box-sizing:border-box;width:100%;max-width:375px;min-height:704px;margin:auto;background:var(--paper);color:var(--ink);border:2px solid var(--ink);border-radius:32px;overflow:hidden;box-shadow:7px 8px 0 var(--line);position:relative;}
+#draw-study .dp-top {padding:19px 22px 10px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px;}
+#draw-study button,#draw-study select {font:inherit;color:inherit;cursor: pointer;}
+#draw-study button {touch-action:manipulation;}
+#draw-study .dp-lang {border:1px solid var(--line);border-radius:20px;padding:7px 12px;background:var(--paper);font-size:13px;}
+#draw-study .dp-main {padding:20px 25px 24px;display:flex;flex-direction:column;min-height:585px;box-sizing:border-box;gap:18px;}
+#draw-study h1 {font-size:46px;line-height:1.08;letter-spacing:-2px;font-weight:800;margin:0;}
+#draw-study h2 {font-size:30px;line-height:1.2;font-weight:750;margin:0;}
+#draw-study p {margin:0;line-height:1.6;font-size:15px;}
+#draw-study .dp-eyebrow {font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:700;}
+#draw-study .dp-sub {opacity:.7;}
+#draw-study .dp-doodle {font-size:54px;line-height:1.4;letter-spacing:14px;transform:rotate(-6deg);color:var(--ink);padding:8px 0;}
+#draw-study .dp-choice {display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+#draw-study .dp-choice button {border:1.5px solid var(--ink);border-radius:12px;padding:13px 6px;background:var(--paper);font-size:14px;}
+#draw-study .dp-choice button[aria-pressed=true] {background:var(--accent);color:var(--accent-ink);box-shadow:3px 3px 0 var(--ink);}
+#draw-study .dp-settings {display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+#draw-study label {font-size:12px;display:flex;flex-direction:column;gap:6px;}
+#draw-study select {width:100%;border:0;border-bottom:1px solid var(--line);padding:8px 0;background:var(--paper);font-size:14px;}
+#draw-study .dp-primary {width:100%;padding:17px 12px;background:var(--ink);color:var(--paper);border:2px solid var(--ink);border-radius:12px;font-weight:700;font-size:16px;}
+#draw-study .dp-secondary {padding:12px;background:transparent;border:1px solid var(--line);border-radius:12px;}
+#draw-study .dp-footer {margin-top:auto;display:flex;flex-direction:column;gap:12px;}
+#draw-study .dp-link {padding:5px;border:0;background:transparent;text-decoration:underline;font-size:13px;}
+#draw-study .dp-paper {text-align:center;background:var(--soft);border:1.5px dashed var(--ink);border-radius:5px 15px 8px 13px;min-height:190px;display:flex;flex-direction:column;justify-content:center;gap:16px;padding:20px;transform:rotate(-2deg);box-sizing:border-box;}
+#draw-study .dp-paper strong {font-size:40px;line-height:1.25;}
+#draw-study .dp-score {display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:12px 0;gap:8px;}
+#draw-study .dp-timer {font-size:90px;font-weight:800;letter-spacing:-5px;text-align:center;padding:20px 0 0;font-variant-numeric:tabular-nums;}
+#draw-study .dp-track {height:9px;background:var(--soft);border-radius:10px;overflow:hidden;}
+#draw-study .dp-track span {display:block;height:100%;background:var(--ink);}
+#draw-study .dp-status {text-align:center;font-size:13px;opacity:.75;}
+#draw-study .poster {--paper:light-dark(#f7c649,#403219);--soft:light-dark(#efb93a,#57421d);border-radius:10px;}
+#draw-study .poster .dp-main {gap:23px;}
+#draw-study .poster h1 {font-size:66px;text-transform:uppercase;letter-spacing:-4px;border-bottom:6px solid var(--ink);padding-bottom:15px;}
+#draw-study .poster .dp-doodle {display:none;}
+#draw-study .poster .dp-choice {grid-template-columns:1fr;}
+#draw-study .poster .dp-choice button {text-align:start;padding:17px;border-radius:0;}
+#draw-study .poster .dp-primary {border-radius:0;}
+#draw-study .studio {--paper:light-dark(#f6f7f9,#252831);--soft:light-dark(#e7ebf2,#353b47);border:1px solid var(--line);box-shadow:0 14px 35px #00000012;}
+#draw-study .studio .dp-main {gap:22px;padding-top:42px;}
+#draw-study .studio h1 {font-size:37px;letter-spacing:-1.5px;font-weight:500;}
+#draw-study .studio .dp-doodle {font-size:30px;order:-1;letter-spacing:6px;}
+#draw-study .studio .dp-choice {grid-template-columns:1fr;}
+#draw-study .studio .dp-choice button {border:0;border-bottom:1px solid var(--line);border-radius:0;text-align:start;background:transparent;box-shadow:none;}
+#draw-study .studio .dp-choice button[aria-pressed=true] {border-inline-start:4px solid var(--ink);padding-inline-start:14px;color:var(--ink);}
+#draw-study .studio .dp-paper {border:0;transform:none;border-radius:20px;}
+#draw-study [dir=rtl] h1 {letter-spacing:0;font-size:43px;line-height:1.35;}
+#draw-study [dir=rtl] .dp-eyebrow {letter-spacing:0;}
+@media(max-width:400px) {#draw-study section[data-variant] {padding-inline:0;} #draw-study .dp-main {padding-inline:20px;} }
+</style>
+<script>
+(() => {
+const root=document.getElementById('draw-study');
+const words={en:['Bicycle','Washing dishes','Elephant'],ar:['عجلة','بيغسل المواعين','فيل']};
+root.querySelectorAll('.dp-phone').forEach(phone=>{
+ let ar=false,stage='home',mode='teams',duration=60,remaining=60,paused=false,score=0,turn=0,rounds=3,interval=null;
+ const t=(en,eg)=>ar?eg:en;
+ function stop(){clearInterval(interval);interval=null;}
+ function names(){return ar?['مريم','عمر','سارة']:['Mariam','Omar','Sara'];}
+ function word(){return words[ar?'ar':'en'][turn%3];}
+ function action(label,id,primary=false){return `<button type="button" class="${primary?'dp-primary':'dp-secondary'}" data-action="${id}">${label}</button>`;}
+ function render(){
+ phone.dir=ar?'rtl':'ltr';phone.lang=ar?'ar-EG':'en';
+ let html=`<header class="dp-top"><span>${t('DESIGN PREVIEW','معاينة التصميم')}</span><button class="dp-lang" data-action="lang">${ar?'English':'مصري'}</button></header><main class="dp-main">`;
+ if(stage==='home'){
+ html+=`<div class="dp-eyebrow">${t('A little drawing. A lot of laughs.','شوية رسم، وضحك كتير.')}</div><h1>${t('Draw.<br>Guess.<br>Crack up.','ارسم.<br>خمّن.<br>اضحك.')}</h1><div class="dp-doodle" aria-hidden="true">✎ ☆ 〰</div><p class="dp-sub">${t('One phone. Your favourite people.','موبايل واحد، وأحلى لَمّة.')}</p><div class="dp-choice"><button data-action="teams" aria-pressed="${mode==='teams'}">${t('Teams','فرق')}</button><button data-action="ffa" aria-pressed="${mode==='ffa'}">${t('Free-for-all','كل واحد لوحده')}</button></div><div class="dp-settings"><label>${t('Turn timer','وقت الدور')}<select data-field="duration">${[30,60,90,120].map(n=>`<option value="${n}" ${duration===n?'selected':''}>${n} ${t('seconds','ثانية')}</option>`).join('')}</select></label><label>${t('Rounds','الجولات')}<select data-field="rounds">${[1,2,3,4,5,6].map(n=>`<option ${rounds===n?'selected':''}>${n}</option>`).join('')}</select></label></div><div class="dp-footer">${action(t('Let’s play →','يلا نلعب ←'),'start',true)}<p class="dp-status">${t('Demo group: Mariam, Omar, Sara + friends','جروب التجربة: مريم وعمر وسارة وصحابهم')}</p></div>`;
+ } else {
+ html+=`<div class="dp-eyebrow">${t('Round','الجولة')} 1 / ${rounds} · ${mode==='teams'?t('Team Sun','فريق الشمس'):t('Everyone guesses','كله بيخمّن')}</div>`;
+ if(stage==='pass'||stage==='reveal') html+=`<h2>${t('Pass the phone<br>to Mariam','ادّي الموبايل<br>لمريم')}</h2><p class="dp-sub">${t('Keep the word a secret.','خلي الكلمة سر.')}</p><div class="dp-paper"><span>${stage==='pass'?t('For the drawer’s eyes only','للّي هيرسم بس'):t('Your word','كلمتك')}</span><strong>${stage==='pass'?'• • •':word()}</strong></div><div class="dp-footer">${action(stage==='pass'?t('Reveal word','ورّيني الكلمة'):t('Start drawing','ابدأ الرسم'),stage==='pass'?'reveal':'draw',true)}<p class="dp-status">${t('Draw on paper. Guess out loud.','ارسموا على ورق وخمّنوا بصوت عالي.')}</p></div>`;
+ if(stage==='draw') html+=`<h2>${t('Mariam is drawing!','مريم بترسم!')}</h2><p class="dp-sub">${t('What could it be?','يا ترى بترسم إيه؟')}</p><div class="dp-timer" data-clock>${remaining}</div><div class="dp-track"><span data-track style="width:${remaining/duration*100}%"></span></div><p class="dp-status" data-paused>${paused?t('Paused','موقوف مؤقتًا'):t('seconds left · word hidden','ثانية فاضلة · الكلمة مخفية')}</p><div class="dp-footer">${action(t('Guessed!','اتخمّنت!'),'guessed',true)}${action(paused?t('Resume','كمّل'):t('Pause','وقّف مؤقتًا'),'pause')}</div>`;
+ if(stage==='guesser') html+=`<h2>${t('Who got it?','مين خمّن صح؟')}</h2><p class="dp-sub">${t('One point for the guesser and Mariam.','نقطة للي خمّن ونقطة لمريم.')}</p>${names().slice(1).map(n=>action(n,'award')).join('')}`;
+ if(stage==='result'||stage==='timeout') html+=`<h2>${stage==='timeout'?t('Time’s up!','الوقت خلص!'):t('Nice one!','عاش!')}</h2><div class="dp-paper"><span>${t('The word was','الكلمة كانت')}</span><strong>${word()}</strong></div><div class="dp-score"><span>${mode==='teams'?t('Team Sun','فريق الشمس'):t('Mariam','مريم')}</span><strong>${score} ${t('points','نقطة')}</strong></div><div class="dp-footer">${stage==='timeout'?action(t('Count a last-second guess','احسب تخمينة آخر ثانية'),'guessed'):''}${action(t('Next turn →','الدور اللي بعده ←'),'next',true)}${action(t('Back to setup','ارجع للإعدادات'),'home')}</div>`;
+ }
+ phone.innerHTML=html+'</main>';
+ }
+ function tick(){stop();interval=setInterval(()=>{if(paused)return;remaining--;const c=phone.querySelector('[data-clock]'),bar=phone.querySelector('[data-track]');if(c)c.textContent=remaining;if(bar)bar.style.width=remaining/duration*100+'%';if(remaining<=0){stop();stage='timeout';render();}},1000);}
+ phone.addEventListener('change',e=>{if(e.target.dataset.field==='duration')duration=Number(e.target.value);if(e.target.dataset.field==='rounds')rounds=Number(e.target.value);});
+ phone.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(!b)return;switch(b.dataset.action){case 'lang':ar=!ar;break;case 'teams':mode='teams';break;case 'ffa':mode='ffa';break;case 'start':stage='pass';score=0;turn=0;break;case 'reveal':stage='reveal';break;case 'draw':stage='draw';remaining=duration;paused=false;tick();break;case 'pause':paused=!paused;break;case 'guessed':stop();if(mode==='ffa')stage='guesser';else{score++;stage='result';}break;case 'award':score++;stage='result';break;case 'next':stop();turn++;stage='pass';break;case 'home':stop();stage='home';break;}render();});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden&&stage==='draw'){paused=true;render();}});
+ render();
+ if(globalThis.Tweak){const styling={roundness:phone.dataset.design==='poster'?10:32};const tweak=new Tweak({container:phone,onChange:()=>phone.style.borderRadius=styling.roundness+'px'});tweak.addSlider(styling,'roundness',{label:'Screen corner radius',min:0,max:40,unit:'px'});}
+});
+})();
+</script>
