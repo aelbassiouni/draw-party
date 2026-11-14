@@ -8,6 +8,7 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useKeepAwake } from 'expo-keep-awake';
@@ -17,6 +18,8 @@ function RunningWake() {
   return null;
 }
 export default function InterruptionScreen() {
+  const { width, height } = useWindowDimensions();
+  const wide = width >= 600;
   const [turn] = useState(() => new TurnProbe(() => performance.now()));
   const [state, setState] = useState(() => turn.read());
   const [reader, setReader] = useState(false);
@@ -80,15 +83,25 @@ export default function InterruptionScreen() {
       {state.running && <RunningWake />}
       <Text style={styles.title}>Interruption check</Text>
       <Text>Development probe · same word, 30 second timer</Text>
+      <Text testID="viewport-state">
+        {Math.round(width)} × {Math.round(height)} dp ·{' '}
+        {wide ? 'wide' : 'compact'} ·{' '}
+        {width > height ? 'landscape' : 'portrait'}
+      </Text>
       <Text testID="turn-state">{state.running ? 'Running' : 'Paused'}</Text>
       <Text testID="privacy-state">
         {state.visible ? 'Word visible' : 'Word hidden'}
       </Text>
-      <Text testID="remaining-ms">
-        {state.running
-          ? Math.ceil(state.remaining / 1000) * 1000
-          : Math.round(state.remaining)}
-      </Text>
+      <View style={wide ? styles.wideRow : undefined}>
+        <Text testID="remaining-ms" style={styles.timer}>
+          {state.running
+            ? Math.ceil(state.remaining / 1000) * 1000
+            : Math.round(state.remaining)}
+        </Text>
+        <Text style={wide ? styles.sidePanel : undefined}>
+          Sample turn · Player 1 · Score 0
+        </Text>
+      </View>
       <Text testID="reader-state">
         {reader ? 'TalkBack on' : 'TalkBack off'}
       </Text>
@@ -176,6 +189,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff8e9',
   },
   title: { fontSize: 28, fontWeight: '700' },
+  timer: { fontSize: 36, fontWeight: '700' },
+  wideRow: { flexDirection: 'row', alignItems: 'center', gap: 32 },
+  sidePanel: { flex: 1 },
   hold: {
     minHeight: 100,
     borderRadius: 12,

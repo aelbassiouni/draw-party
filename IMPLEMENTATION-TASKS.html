@@ -25,11 +25,11 @@ h3{font-size:20px;line-height:1.4;margin:32px 0 10px;scroll-margin-top:24px;brea
 <a class="source-link" href="IMPLEMENTATION-TASKS.md">View Markdown source</a>
 </aside>
 <main id="content">
-<header><div class="eyebrow">One phone. Paper. Your people.</div><h1>Implementation<br>tasks</h1><p>49 bounded tasks · Android first · Galaxy S23 Ultra</p><p class="meta">Last updated: 2026-11-11</p><span class="badge">In progress · Next T08</span></header>
+<header><div class="eyebrow">One phone. Paper. Your people.</div><h1>Implementation<br>tasks</h1><p>49 bounded tasks · Android first · Galaxy S23 Ultra</p><p class="meta">Last updated: 2026-11-15</p><span class="badge">In progress · Next T11</span></header>
 <section id="how-to-use-this-backlog" aria-labelledby="how-to-use-this-backlog-title"><h2 id="how-to-use-this-backlog-title">How to use this backlog</h2>
-<p>T01–T07 are complete; next is T08 SQLite persistence. 42 of 49 tasks remain. T40 remains blocked by unavailable physical Fold access. Work in the order below unless their dependencies allow another order. Each task is a bounded change or validation session with a concrete completion check. Mark a task done only when its completion check passes; if hardware or access is unavailable, record the blocker and continue only with independent tasks.</p>
+<p>T01–T10 are complete; M0 is closed and T11 turn rotation is next. 39 of 49 tasks remain. T40 remains blocked by unavailable physical Fold access. Work in the order below unless their dependencies allow another order. Each task is a bounded change or validation session with a concrete completion check. Mark a task done only when its completion check passes; if hardware or access is unavailable, record the blocker and continue only with independent tasks.</p>
 <p>Android is the current delivery target. The primary phone is the user's Samsung Galaxy S23 Ultra running Android 17. iPhone implementation is deferred. The product specification remains authoritative; IMPLEMENTATION-PLAN.md explains the proposed technical approach.</p>
-<p>Next task: T08. First checkpoint: T04, when a native development build runs on the S23 Ultra. First complete playable game: T22. A task being written here does not mean it has been implemented or tested. Pure rules and content work may proceed once its dependencies are ready without waiting for T09; native UI integration still requires feasibility checks.</p></section>
+<p>Next task: T11. First checkpoint: T04, when a native development build runs on the S23 Ultra. First complete playable game: T22. A task being written here does not mean it has been implemented or tested. Pure rules and content work may proceed once its dependencies are ready without waiting for T09; native UI integration still requires feasibility checks.</p></section>
 <section id="m0-prove-the-android-foundation" aria-labelledby="m0-prove-the-android-foundation-title"><h2 id="m0-prove-the-android-foundation-title">M0 — Prove the Android foundation</h2>
 <h3 id="t01">T01 — Check the development environment</h3>
 <p>Status: Done; environment and native build route verified. See T01-ENVIRONMENT.md and T04-NATIVE-CHECKPOINT.md. Depends on: none.</p>
@@ -74,20 +74,20 @@ h3{font-size:20px;line-height:1.4;margin:32px 0 10px;scroll-margin-top:24px;brea
 <li>Done when: interruptions freeze the countdown and hide the word; resuming needs an explicit action. Releasing, cancelling, or leaving the hold control hides its word. Record any assistive-technology interaction that needs design resolution before building the final control.</li>
 </ul>
 <h3 id="t08">T08 — Check SQLite persistence</h3>
-<p>Status: Not started. Depends on: T04.</p>
+<p>Status: Done; emulator transaction rollback and force-stop recovery verified. See <a href="T08-SQLITE-CHECK.md">T08-SQLITE-CHECK.md</a>. Depends on: T04.</p>
 <ul>
 <li>Scope: save and restore a small versioned sample snapshot through SQLite; verify transactions and error handling on the device.</li>
 <li>Done when: data survives app termination/relaunch, a failed transaction leaves the prior valid state intact, and the storage API can be wrapped without exposing SQL to screens.</li>
 </ul>
 <h3 id="t09">T09 — Check resizing and close the feasibility milestone</h3>
-<p>Status: Not started. Depends on: T05, T06, T07, T08.</p>
+<p>Status: Done; resizable-emulator countdown, orientation, and hidden-transition checks passed. See <a href="T09-RESIZING-CHECK.md">T09-RESIZING-CHECK.md</a>. Depends on: T05, T06, T07, T08.</p>
 <ul>
 <li>Scope: exercise a foldable/resizable Android emulator, compact/wide layouts, orientation, and a running sample countdown. Summarize M0 findings and unresolved device risks.</li>
 <li>Done when: visible resizing preserves the timer/session; hidden transitions pause. Document proposed orientation detection and any need for native fold information. Every M0 issue has evidence of resolution or a tracked remedy. Physical Fold verification remains T40.</li>
 </ul></section>
 <section id="m1-build-the-first-complete-playable-game" aria-labelledby="m1-build-the-first-complete-playable-game-title"><h2 id="m1-build-the-first-complete-playable-game-title">M1 — Build the first complete playable game</h2>
 <h3 id="t10">T10 — Validate setup data</h3>
-<p>Status: Not started. Depends on: T03.</p>
+<p>Status: Done; validated immutable session setup and boundary tests pass. Depends on: T03.</p>
 <ul>
 <li>Scope: define stable player/team IDs, immutable game settings, player/team limits, name validation, timer/difficulty/round options, and setup-to-session validation.</li>
 <li>Done when: tests accept all supported boundaries and reject invalid rosters/settings without creating a game. Keep display names separate from identity.</li>

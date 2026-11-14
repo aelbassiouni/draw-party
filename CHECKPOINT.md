@@ -1,12 +1,12 @@
 # Draw Party checkpoint
 
-Saved: 2026-11-12. User requested checkpoint, commit and push.
+Saved: 2026-11-15. T10 setup validation passed; M0 closed.
 
 ## Resume here
 
-T01–T07 feasibility work is complete. Next: T08 SQLite persistence (see IMPLEMENTATION-TASKS.md). There are 42 remaining tasks out of 49, including T40 blocked by unavailable physical Fold hardware. Do not repeat specification approval. Android first; iPhone deferred.
+T01–T10 are complete. Next: T11 turn rotation (see IMPLEMENTATION-TASKS.md). There are 39 remaining tasks out of 49, including T40 blocked by unavailable physical Fold hardware. Do not repeat specification approval. Android first; iPhone deferred.
 
-Current app entry is the development interruption/private-word probe, not production gameplay. Production game work begins after remaining feasibility checks. T22 is the first complete playable-game checkpoint.
+Current app entry is the development interruption/resize probe, not production gameplay. Production game work begins after remaining feasibility checks. T22 is the first complete playable-game checkpoint.
 
 ## Authoritative documents
 
@@ -14,13 +14,13 @@ Current app entry is the development interruption/private-word probe, not produc
 - IMPLEMENTATION-PLAN.md: architecture and milestones.
 - IMPLEMENTATION-TASKS.md: 49 task dependencies and completion checks.
 - HTML copies are readable companions.
-- T01-ENVIRONMENT.md through T07-INTERRUPTION-CHECK.md record implementation/verification evidence; read their latest results when earlier investigation notes differ.
+- T01-ENVIRONMENT.md through T09-RESIZING-CHECK.md record implementation/verification evidence; read their latest results when earlier investigation notes differ.
 
 ## Implemented and verified
 
 Expo 58.0.24, React Native 0.88.1, React 19.3.0, TypeScript 6.0.3. Exact dependencies and npm lockfile saved. Development application ID com.drawparty.dev, Android minimum API 26. Native debug builds installed on emulator and S23 Ultra.
 
-T03: formatting, ESLint, strict types, Expo Android Jest preset and GitHub Actions workflow. npm run check passes with three behavioral clock/privacy tests; Android export passes. Remote CI is configured but no successful remote run is claimed yet.
+T03: formatting, ESLint, strict types, Expo Android Jest preset and GitHub Actions workflow. npm run check passes; Android export passed during feasibility work. Remote CI is configured but no successful remote run is claimed yet.
 
 T04: native starter, cold restart and Metro reconnection passed on emulator and physical Galaxy S23 Ultra SM-S918B, Android 17/API 37.
 
@@ -30,11 +30,15 @@ T06: normal/silent/vibrate, independent feedback switches, actual media volume z
 
 T07: monotonic elapsed clock, hold/release/drag-out/reentry, notification blur and background checks passed; emulator sleep/wake/expiry and user-confirmed physical lock/unlock passed. Agent independently verified active TalkBack via emulator hardware-console touch input and screenshots. Swipe navigation establishes focus, double-tap-and-hold reveals, release/drag-out hide, moving back does not reveal. Standard Pressable semantics used. Ordinary emulator regressions passed after that change. Private nonvisual word-reading remains an explicit T17 design requirement; this probe does not speak secret words aloud.
 
+T09: resizable Android 17 emulator checks passed at 411×914 compact portrait, 686×838 wide portrait, and 914×411 wide landscape. A running countdown kept its state/time through visible resize; Home paused and hid the word. See T09-RESIZING-CHECK.md for the M0 issue/remedy summary. The emulator lacks a hinge profile and physical Fold remains T40.
+
+T10: src/game/setup.ts validates free-for-all and team rosters, stable unique IDs, nonempty bounded names, complete turn order, team membership, and every supported setting. Valid setup is copied into an immutable session value; invalid input returns errors without a session. src/game/setup.test.ts covers limits, unequal teams, invalid data, independent languages, and immutability. `npm run check` passed: 2 suites, 9 tests.
+
 ## User preferences and open acceptance
 
 The user delegates TalkBack testing to the agent; do not ask the user to repeat it. Use emulator first, with physical hardware checks where needed. No Fold access: keep T40/release verification gap open. Egyptian Arabic content review remains T34/T35; release identity/signing remains T45. Do not add recent-apps preview protection; the user declined it.
 
-T08 has not started. Feasibility state is in memory; no process-death recovery or SQLite persistence has been implemented. Probe screens are retained under src/feasibility. The pure clock/privacy probe and three tests are under src/platform.
+T08 SQLite sample snapshot, transaction rollback, and force-stop recovery passed on Android 17 emulator. The storage probe remains under src/feasibility. Production session persistence and process-death recovery remain T23–T26. Probe screens are retained under src/feasibility.
 
 ## Windows tooling and local build route
 
@@ -59,8 +63,8 @@ index.ts imports Expo runtime initialization but registers the native root direc
 
 ## Outstanding limits
 
-No production gameplay, persistence, full localization, released APK, store submission or physical Fold acceptance. Dependency audit findings remain documented in T03-CHECKS.md (28 entries at T06: 1 low, 27 moderate); no forced incompatible downgrade applied. Full release security/device acceptance remains later work.
+No production gameplay, production session persistence, full localization, released APK, store submission or physical Fold acceptance. Dependency audit findings remain documented in T03-CHECKS.md (28 entries at T06: 1 low, 27 moderate); no forced incompatible downgrade applied. Full release security/device acceptance remains later work.
 
 ## Git handoff
 
-The requested commit includes planning documents, checkpoints, starter code/assets, CI and feasibility work. Generated native directories, credentials, dependencies and local diagnostics stay ignored. Verify git status/log and origin after this operation; do not infer a successful push solely from this checkpoint.
+Save this checkpoint in a local commit with the completed T08–T10 work and updated task documents. Generated native directories, credentials, dependencies and local diagnostics stay ignored. No push is implied by this checkpoint.

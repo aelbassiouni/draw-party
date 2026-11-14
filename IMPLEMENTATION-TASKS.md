@@ -4,11 +4,11 @@ Prepared: 2026-11-11
 
 ## How to use this backlog
 
-T01–T07 are complete; next is T08 SQLite persistence. 42 of 49 tasks remain. T40 remains blocked by unavailable physical Fold access. Work in the order below unless their dependencies allow another order. Each task is a bounded change or validation session with a concrete completion check. Mark a task done only when its completion check passes; if hardware or access is unavailable, record the blocker and continue only with independent tasks.
+T01–T10 are complete; M0 is closed and T11 turn rotation is next. 39 of 49 tasks remain. T40 remains blocked by unavailable physical Fold access. Work in the order below unless their dependencies allow another order. Each task is a bounded change or validation session with a concrete completion check. Mark a task done only when its completion check passes; if hardware or access is unavailable, record the blocker and continue only with independent tasks.
 
 Android is the current delivery target. The primary phone is the user's Samsung Galaxy S23 Ultra running Android 17. iPhone implementation is deferred. The product specification remains authoritative; IMPLEMENTATION-PLAN.md explains the proposed technical approach.
 
-Next task: T08. First checkpoint: T04, when a native development build runs on the S23 Ultra. First complete playable game: T22. A task being written here does not mean it has been implemented or tested. Pure rules and content work may proceed once its dependencies are ready without waiting for T09; native UI integration still requires feasibility checks.
+Next task: T11. First checkpoint: T04, when a native development build runs on the S23 Ultra. First complete playable game: T22. A task being written here does not mean it has been implemented or tested. Pure rules and content work may proceed once its dependencies are ready without waiting for T09; native UI integration still requires feasibility checks.
 
 ## M0 — Prove the Android foundation
 
@@ -63,14 +63,14 @@ Status: Done; core device checks and agent-run active TalkBack hold/release/canc
 
 ### T08 — Check SQLite persistence
 
-Status: Not started. Depends on: T04.
+Status: Done; emulator transaction rollback and force-stop recovery verified. See T08-SQLITE-CHECK.md. Depends on: T04.
 
 - Scope: save and restore a small versioned sample snapshot through SQLite; verify transactions and error handling on the device.
 - Done when: data survives app termination/relaunch, a failed transaction leaves the prior valid state intact, and the storage API can be wrapped without exposing SQL to screens.
 
 ### T09 — Check resizing and close the feasibility milestone
 
-Status: Not started. Depends on: T05, T06, T07, T08.
+Status: Done; resizable-emulator countdown, orientation, and hidden-transition checks passed. See T09-RESIZING-CHECK.md. Depends on: T05, T06, T07, T08.
 
 - Scope: exercise a foldable/resizable Android emulator, compact/wide layouts, orientation, and a running sample countdown. Summarize M0 findings and unresolved device risks.
 - Done when: visible resizing preserves the timer/session; hidden transitions pause. Document proposed orientation detection and any need for native fold information. Every M0 issue has evidence of resolution or a tracked remedy. Physical Fold verification remains T40.
@@ -79,7 +79,7 @@ Status: Not started. Depends on: T05, T06, T07, T08.
 
 ### T10 — Validate setup data
 
-Status: Not started. Depends on: T03.
+Status: Done; validated immutable session setup and boundary tests pass in src/game/setup.ts and src/game/setup.test.ts. Depends on: T03.
 
 - Scope: define stable player/team IDs, immutable game settings, player/team limits, name validation, timer/difficulty/round options, and setup-to-session validation.
 - Done when: tests accept all supported boundaries and reject invalid rosters/settings without creating a game. Keep display names separate from identity.
