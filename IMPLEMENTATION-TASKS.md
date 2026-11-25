@@ -4,11 +4,11 @@ Prepared: 2026-11-11
 
 ## How to use this backlog
 
-T01–T10 are complete; M0 is closed and T11 turn rotation is next. 39 of 49 tasks remain. T40 remains blocked by unavailable physical Fold access. Work in the order below unless their dependencies allow another order. Each task is a bounded change or validation session with a concrete completion check. Mark a task done only when its completion check passes; if hardware or access is unavailable, record the blocker and continue only with independent tasks.
+T01–T15 are complete and M0 is closed. T16 is next. Use local automated checks and Android emulator testing during implementation. Defer physical-phone testing to final acceptance. Keep physical-device completion checks open until that pass. T40 remains blocked by unavailable physical Fold access.
 
 Android is the current delivery target. The primary phone is the user's Samsung Galaxy S23 Ultra running Android 17. iPhone implementation is deferred. The product specification remains authoritative; IMPLEMENTATION-PLAN.md explains the proposed technical approach.
 
-Next task: T11. First checkpoint: T04, when a native development build runs on the S23 Ultra. First complete playable game: T22. A task being written here does not mean it has been implemented or tested. Pure rules and content work may proceed once its dependencies are ready without waiting for T09; native UI integration still requires feasibility checks.
+Next task: T16. T22 is the first complete playable-game checkpoint. Run its native smoke flow on the emulator during development and defer the physical-phone acceptance runs.
 
 ## M0 — Prove the Android foundation
 
@@ -86,35 +86,35 @@ Status: Done; validated immutable session setup and boundary tests pass in src/g
 
 ### T11 — Implement turn rotation and round counting
 
-Status: Not started. Depends on: T10.
+Status: Done. Local tests cover selected order, independent rotation for unequal teams, and completion after round five. Depends on: T10.
 
 - Scope: selected player order, team order, drawer order within teams, fixed advancement, and regular-game completion.
 - Done when: tests prove one free-for-all turn per player per round and one team turn per team per round, including unequal teams and the final turn of round five.
 
 ### T12 — Add a small development word bank and selector
 
-Status: Not started. Depends on: T10.
+Status: Done. Local tests cover deterministic selection, mixed difficulty balance, concept exclusion, and exhaustion. Depends on: T10.
 
 - Scope: stable word/concept IDs, language and difficulty fields, bundled sample prompts, deterministic shuffling, balanced Mixed draws, and current-game exclusion. Label sample content as incomplete.
 - Done when: tests show no within-game repeats and predictable selections with a seeded random source; exhaustion is reported explicitly. Full banks are T32–T34.
 
 ### T13 — Implement turn phases and legal commands
 
-Status: Not started. Depends on: T10, T11, T12.
+Status: Done. Local engine tests verify phase transitions, privacy, same-word resume, and stale-command rejection. Depends on: T10, T11, T12.
 
 - Scope: handoff, private reveal, drawing, pause, pending guess, result, between turns, and completion. Add unique turn IDs and reject illegal/stale commands.
 - Done when: tests cover legal transitions, hidden-word phases, same-word resume, and repeated commands without unintended advancement. Keep React and native APIs outside the engine.
 
 ### T14 — Implement countdown logic with a fake clock
 
-Status: Not started. Depends on: T13.
+Status: Done. Local engine tests use controlled monotonic timestamps across all four durations, including delayed expiry and a guess captured before expiry. Depends on: T13.
 
 - Scope: monotonic elapsed time, remaining milliseconds, pause/resume, zero clamping, and expiry commands. Do not count UI interval ticks as elapsed time.
 - Done when: tests cover delayed ticks, repeated expiry, expiry versus Guessed races, all four configured durations, and action-time capture before queued storage work. Pause/Guessed freeze immediately; late callbacks cannot alter captured remaining time or duplicate a result.
 
 ### T15 — Implement scoring and result confirmation
 
-Status: Not started. Depends on: T13, T14.
+Status: Done. Local engine tests verify team and free-for-all scoring, simultaneous guesses, last-second correction, and no-points outcomes. Depends on: T13, T14.
 
 - Scope: team scoring; eligible free-for-all guessers, including simultaneous first guessers; drawer points; pending confirmation/resume; timeout and last-second correction; violation/no-points results.
 - Done when: tests reject ineligible guessers and award each outcome exactly once. Pending guesses keep the word hidden until confirmation.

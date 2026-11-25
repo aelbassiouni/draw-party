@@ -4,7 +4,7 @@ Saved: 2026-11-15. T10 setup validation passed; M0 closed.
 
 ## Resume here
 
-T01–T10 are complete. Next: T11 turn rotation (see IMPLEMENTATION-TASKS.md). There are 39 remaining tasks out of 49, including T40 blocked by unavailable physical Fold hardware. Do not repeat specification approval. Android first; iPhone deferred.
+T01–T15 are complete. Next: T16 tiebreaker rounds (see IMPLEMENTATION-TASKS.md). Use the Android emulator and local automated checks during development. Physical-phone testing is deferred to final acceptance. Physical Fold access remains unavailable for T40. Android first; iPhone deferred.
 
 Current app entry is the development interruption/resize probe, not production gameplay. Production game work begins after remaining feasibility checks. T22 is the first complete playable-game checkpoint.
 
@@ -33,6 +33,10 @@ T07: monotonic elapsed clock, hold/release/drag-out/reentry, notification blur a
 T09: resizable Android 17 emulator checks passed at 411×914 compact portrait, 686×838 wide portrait, and 914×411 wide landscape. A running countdown kept its state/time through visible resize; Home paused and hid the word. See T09-RESIZING-CHECK.md for the M0 issue/remedy summary. The emulator lacks a hinge profile and physical Fold remains T40.
 
 T10: src/game/setup.ts validates free-for-all and team rosters, stable unique IDs, nonempty bounded names, complete turn order, team membership, and every supported setting. Valid setup is copied into an immutable session value; invalid input returns errors without a session. src/game/setup.test.ts covers limits, unequal teams, invalid data, independent languages, and immutability. `npm run check` passed: 2 suites, 9 tests.
+
+T11–T12: The regular turn schedule respects configured order and cycles team drawers independently. The development word selector has 16 bilingual concepts, balances Mixed draws, excludes used concepts, and reports exhaustion. `npm run check` passed with 4 suites and 12 tests.
+
+T13–T15: The platform-independent engine in src/game/engine.ts implements regular turn phases, stale-command rejection, private-word visibility, elapsed-time countdowns, and result scoring. Timed commands carry the monotonic timestamp captured at input. The future session controller must apply input in capture order and publish pause/guess state immediately before awaiting persistence. The engine reaches regular completion or reports word exhaustion. T16 adds tiebreakers and T19 connects drawing to the app. Local checks passed with 5 suites and 19 tests.
 
 ## User preferences and open acceptance
 
