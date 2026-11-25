@@ -1,12 +1,18 @@
 # Draw Party checkpoint
 
-Saved November 25, 2026 after implementing T16–T20.
+Saved November 25, 2026 after the T30–T35 implementation pass.
 
 ## Resume here
 
-T01–T20 are implemented. T21 covers final results and replay setup. Use the Android emulator and local automated checks during development. Physical-phone testing is deferred to final acceptance. Physical Fold access remains unavailable for T40. Android comes first, with iPhone deferred.
+T01–T30 and T32–T33 are implemented. T31 has automated recovery coverage and an Android scenario awaiting a successful emulator run. T34–T35 are integrated and await native Egyptian Arabic review. T35 also awaits mixed-script checks on a physical phone. See [T30–T35 verification](T30-T35-CHECKS.md). Physical-phone testing is deferred to final acceptance. Physical Fold access remains unavailable for T40. Android comes first, with iPhone deferred.
 
-The app opens the Notebook home. T22 is the first complete playable-game checkpoint.
+T36–T39 are implemented. SQLite persists the interface preference and first-game overview dismissal. A resumed game uses the current interface preference and its saved word bank. Notebook screens use safe-area insets and scroll with the keyboard. During drawing, windows at least 640 dp wide show public scores, with the columns stacking when system text needs more room. The active turn and word stay in the session controller when the layout changes.
+
+The Android bundle exports successfully and the x86_64 debug APK builds with the safe-area module. The Expo config plugin constrains generated CMake object paths on Windows so Ninja can compile that module. All 172 automated tests pass. The Android 17 emulator reached the first-game handoff after skipping the overview. A running turn kept its drawer and word and continued counting down across 690 × 840, 920 × 440, and 410 × 910 dp viewport changes and through portrait–landscape–portrait rotation. Spacing out SQLite checkpoint attempts resolved the emulator pause on rotation back to portrait. Home paused the turn and reopening kept it paused. Narrow and large-text visual checks and physical-phone acceptance remain open.
+
+T40 still requires a physical Fold to verify cover and unfolded layouts, visible transitions, and pause on hide or lock. Cover-screen orientation policy remains subject to that run.
+
+The app opens the Notebook home. See [T21–T25 verification](T21-T25-CHECKS.md) for the M1 gameplay checkpoint and persistence checks.
 
 ## Authoritative documents
 
@@ -48,7 +54,7 @@ Verification: `npm run check` passed with 25 tests. On the Android 17 emulator, 
 
 The user delegates TalkBack testing to the agent; do not ask the user to repeat it. Use emulator first, with physical hardware checks where needed. No Fold access: keep T40/release verification gap open. Egyptian Arabic content review remains T34/T35; release identity/signing remains T45. Do not add recent-apps preview protection; the user declined it.
 
-T08 SQLite sample snapshot, transaction rollback, and force-stop recovery passed on Android 17 emulator. The storage probe remains under src/feasibility. Production session persistence and process-death recovery remain T23–T26. Probe screens are retained under src/feasibility.
+T08 SQLite sample snapshot, transaction rollback, and force-stop recovery passed on Android 17 emulator. The storage probe remains under src/feasibility. Production SQLite storage and paused recovery snapshots are available. The home screen offers recovery and confirms replacement of existing sessions.
 
 ## Windows tooling and local build route
 
@@ -73,7 +79,7 @@ index.ts imports Expo runtime initialization but registers the native root direc
 
 ## Outstanding limits
 
-Production session persistence, the final results and replay UI, full word banks and localization review, released APK, store submission, and physical Fold acceptance remain open. Dependency audit findings remain documented in T03-CHECKS.md (28 entries at T06: 1 low, 27 moderate); no forced incompatible downgrade applied. Full release security/device acceptance remains later work.
+Home-screen recovery, saved-group screens, full word banks and localization review, released APK, store submission, and physical Fold acceptance remain open. Dependency audit findings remain documented in T03-CHECKS.md (28 entries at T06: 1 low, 27 moderate). Full release security/device acceptance remains later work.
 
 ## Git handoff
 

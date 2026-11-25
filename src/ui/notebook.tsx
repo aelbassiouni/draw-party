@@ -1,12 +1,18 @@
 import type { ReactNode } from 'react';
 import {
+  Modal,
   Pressable,
+  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import {
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 
 export const ink = '#27233b';
 export const paper = '#fffdf7';
@@ -19,8 +25,6 @@ export const styles = StyleSheet.create({
     alignSelf: 'center',
     padding: 18,
     gap: 14,
-    paddingTop: (StatusBar.currentHeight ?? 0) + 20,
-    paddingBottom: 48,
   },
   card: {
     backgroundColor: paper,
@@ -33,7 +37,8 @@ export const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   rtl: { flexDirection: 'row-reverse' },
   title: { fontSize: 32, fontWeight: '800', color: ink },
-  body: { fontSize: 17, color: ink },
+  heading: { fontSize: 20, fontWeight: '800', color: accent },
+  body: { fontSize: 17, color: ink, maxWidth: '100%' },
   right: { textAlign: 'right', writingDirection: 'rtl' },
   left: { textAlign: 'left', writingDirection: 'ltr' },
   button: {
@@ -48,6 +53,7 @@ export const styles = StyleSheet.create({
     borderColor: '#b0a2cd',
   },
   primary: { backgroundColor: accent, borderColor: accent },
+  input: { backgroundColor: '#fff', flexShrink: 1 },
   white: { color: '#fff', fontWeight: '700' },
   disabled: { opacity: 0.55 },
 });
@@ -56,15 +62,28 @@ export function Page({
   children,
   title,
   rtl,
+  wide,
 }: {
   children: ReactNode;
   title: string;
   rtl: boolean;
+  wide?: boolean;
 }) {
+  const insets = useSafeAreaInsets();
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[
+        styles.content,
+        {
+          maxWidth: wide ? 1100 : 720,
+          paddingTop: insets.top + 16,
+          paddingBottom: insets.bottom + 20,
+          paddingLeft: insets.left + 16,
+          paddingRight: insets.right + 16,
+        },
+      ]}
+      keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
       keyboardShouldPersistTaps="handled"
     >
       <StatusBar barStyle="dark-content" />
@@ -82,6 +101,23 @@ export function Page({
 export function Body({ children, rtl }: { children: ReactNode; rtl: boolean }) {
   return (
     <Text style={[styles.body, rtl ? styles.right : styles.left]}>
+      {children}
+    </Text>
+  );
+}
+
+export function Heading({
+  children,
+  rtl,
+}: {
+  children: ReactNode;
+  rtl: boolean;
+}) {
+  return (
+    <Text
+      accessibilityRole="header"
+      style={[styles.heading, rtl ? styles.right : styles.left]}
+    >
       {children}
     </Text>
   );
@@ -111,6 +147,7 @@ export function Button({
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
+        { maxWidth: '100%', flexShrink: 1 },
         (primary || selected) && styles.primary,
         (pressed || disabled) && styles.disabled,
       ]}
@@ -134,12 +171,14 @@ export function Choices<T extends string | number | boolean>({
   value,
   change,
   rtl,
+  testID,
 }: {
   label: string;
   options: readonly (readonly [T, string])[];
   value: T;
   change: (value: T) => void;
   rtl: boolean;
+  testID?: string;
 }) {
   return (
     <View style={{ gap: 8 }}>
@@ -148,6 +187,7 @@ export function Choices<T extends string | number | boolean>({
         {options.map(([key, text]) => (
           <Button
             key={String(key)}
+            testID={testID && `${testID}-${String(key)}`}
             label={text}
             selected={value === key}
             onPress={() => change(key)}
@@ -159,6 +199,7 @@ export function Choices<T extends string | number | boolean>({
 }
 
 export function ConfirmDialog({
+  modal = false,
   prompt,
   accept,
   cancel,
@@ -166,6 +207,7 @@ export function ConfirmDialog({
   confirm,
   close,
 }: {
+  modal?: boolean;
   prompt: string;
   accept: string;
   cancel: string;
@@ -173,7 +215,7 @@ export function ConfirmDialog({
   confirm: () => void;
   close: () => void;
 }) {
-  return (
+  const content = (
     <View style={styles.card}>
       <Body rtl={rtl}>{prompt}</Body>
       <View style={[styles.row, rtl && styles.rtl]}>
@@ -185,6 +227,39 @@ export function ConfirmDialog({
           testID="accept-dialog"
         />
       </View>
+    </View>
+  );
+  if (!modal) return content;
+  return (
+    <Modal transparent animationType="fade" onRequestClose={close}>
+      <SafeAreaProvider>
+        <DialogSurface>{content}</DialogSurface>
+      </SafeAreaProvider>
+    </Modal>
+  );
+}
+
+function DialogSurface({ children }: { children: ReactNode }) {
+  const { top, bottom, left, right } = useSafeAreaInsets();
+  return (
+    <View
+      accessibilityViewIsModal
+      style={{
+        flex: 1,
+        justifyContent: 'center',
+        backgroundColor: '#27233b88',
+        paddingTop: top,
+        paddingBottom: bottom,
+        paddingLeft: left,
+        paddingRight: right,
+      }}
+    >
+      <ScrollView
+        style={{ flexGrow: 0 }}
+        contentContainerStyle={styles.content}
+      >
+        {children}
+      </ScrollView>
     </View>
   );
 }

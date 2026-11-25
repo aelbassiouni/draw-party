@@ -9,8 +9,8 @@ import {
   type Setup,
   type SessionSetup,
 } from '../game/setup';
-import { developmentWords, unusedWords } from '../game/words';
-import { translator, type Translate } from './copy';
+import { wordBank, unusedWords } from '../game/words';
+import { teamName, translator, type Translate } from './copy';
 import { Body, Button, Choices, Page, styles } from './notebook';
 
 export function LanguageChoices({
@@ -40,12 +40,34 @@ export function LanguageChoices({
   );
 }
 
-export function Rules({ t, rtl }: { t: Translate; rtl: boolean }) {
+export function Rules({
+  t,
+  rtl,
+  mode,
+  overview,
+}: {
+  t: Translate;
+  rtl: boolean;
+  mode?: Setup['mode'];
+  overview?: boolean;
+}) {
   return (
     <View style={styles.card}>
-      <Body rtl={rtl}>{t('ruleDraw')}</Body>
-      <Body rtl={rtl}>{t('ruleScore')}</Body>
-      <Body rtl={rtl}>{t('ruleTie')}</Body>
+      {(!mode || overview) && <Body rtl={rtl}>{t('ruleDraw')}</Body>}
+      {mode !== 'freeForAll' && <Body rtl={rtl}>{t('ruleTeams')}</Body>}
+      {mode !== 'teams' && <Body rtl={rtl}>{t('ruleFreeForAll')}</Body>}
+      {(!mode || overview) && (
+        <>
+          <Body rtl={rtl}>{t('ruleRestrictions')}</Body>
+          <Body rtl={rtl}>{t('ruleJudging')}</Body>
+        </>
+      )}
+      {!mode && (
+        <>
+          <Body rtl={rtl}>{t('ruleResults')}</Body>
+          <Body rtl={rtl}>{t('ruleTie')}</Body>
+        </>
+      )}
     </View>
   );
 }
@@ -73,7 +95,7 @@ function Order({
           <Body rtl={rtl}>
             {index === 0
               ? t('first', { name: name(id) })
-              : `${index + 1}. ${name(id)}`}
+              : t('orderEntry', { number: index + 1, name: name(id) })}
           </Body>
           {index > 0 && (
             <Button
@@ -96,34 +118,76 @@ export function SetupScreen({
   setLanguage,
   back,
   start,
+  initial,
+  groupEditor,
 }: {
   language: Language;
   setLanguage: (language: Language) => void;
   back: () => void;
-  start: (setup: SessionSetup) => void;
+  start?: (setup: SessionSetup) => void;
+  initial?: SessionSetup;
+  groupEditor?: {
+    name: string;
+    save: (name: string, setup: SessionSetup) => void;
+    busy: boolean;
+    failed: boolean;
+  };
 }) {
   const t = translator(language);
   const rtl = language === 'ar';
-  const [mode, setMode] = useState<Setup['mode']>('freeForAll');
-  const [players, setPlayers] = useState<Player[]>([
-    { id: 'p1', name: '' },
-    { id: 'p2', name: '' },
-    { id: 'p3', name: '' },
-  ]);
+  const [mode, setMode] = useState<Setup['mode']>(
+    initial?.mode ?? 'freeForAll',
+  );
+  const [groupName, setGroupName] = useState(groupEditor?.name ?? '');
+  const [players, setPlayers] = useState<Player[]>(() =>
+    initial
+      ? initial.mode === 'freeForAll'
+        ? initial.playerOrder.map((id) =>
+            initial.players.find((player) => player.id === id)!,
+          )
+        : [...initial.players]
+      : [
+          { id: 'p1', name: '' },
+          { id: 'p2', name: '' },
+          { id: 'p3', name: '' },
+        ],
+  );
   const serial = useRef(4);
-  const [teamCount, setTeamCount] = useState(2);
-  const [members, setMembers] = useState<string[][]>([
-    ['p1', 'p3'],
-    ['p2'],
-    [],
-    [],
+  const [teamCount, setTeamCount] = useState(initial?.teams.length || 2);
+  const [members, setMembers] = useState<string[][]>(() => {
+    if (initial?.teams.length)
+      return Array.from({ length: 4 }, (_, index) => [
+        ...(initial.teams[index]?.playerIds ?? []),
+      ]);
+    const ids = players.map(({ id }) => id);
+    return [
+      ids.filter((_, index) => index % 2 === 0),
+      ids.filter((_, index) => index % 2 === 1),
+      [],
+      [],
+    ];
+  });
+  const teamIds = Array.from({ length: 4 }, (_, index) => {
+    if (initial?.teams[index]) return initial.teams[index].id;
+    let id = `t${index + 1}`;
+    while (initial?.teams.some((team) => team.id === id)) id += '_';
+    return id;
+  });
+  const [teamOrder, setTeamOrder] = useState(() => [
+    ...(initial?.teamOrder ?? []),
+    ...teamIds.filter((id) => !initial?.teamOrder.includes(id)),
   ]);
-  const [teamOrder, setTeamOrder] = useState(['t1', 't2', 't3', 't4']);
-  const [settings, setSettings] = useState<Settings>(() => ({
-    ...DEFAULT_SETTINGS,
-    wordLanguage: language,
-  }));
-  const wordLanguageChosen = useRef(false);
+  const [settingsDraft, setSettings] = useState(
+    initial?.settings ?? DEFAULT_SETTINGS,
+  );
+  const [wordLanguage, setWordLanguage] = useState(
+    initial?.settings.wordLanguage,
+  );
+  const settings = {
+    ...settingsDraft,
+    interfaceLanguage: language,
+    wordLanguage: wordLanguage ?? language,
+  };
   const [review, setReview] = useState(false);
   useEffect(() => {
     const subscription = BackHandler.addEventListener(
@@ -139,8 +203,8 @@ export function SetupScreen({
   const [errors, setErrors] = useState<readonly string[]>([]);
   const teamsMode = mode === 'teams';
   const teams = members.slice(0, teamCount).map((playerIds, index) => ({
-    id: `t${index + 1}`,
-    name: t('team', { number: index + 1 }),
+    id: teamIds[index],
+    name: teamName(t, index + 1, initial?.teams[index]?.name),
     playerIds,
   }));
   const name = (id: string) =>
@@ -154,12 +218,12 @@ export function SetupScreen({
     teams: teamsMode ? teams : [],
     playerOrder: teamsMode ? [] : players.map((player) => player.id),
     teamOrder: teamsMode ? order : [],
-    settings: { ...settings, interfaceLanguage: language },
+    settings,
   };
   const valid = validateSetup(draft);
   const needed = (teamsMode ? teamCount : players.length) * settings.rounds;
   const available = unusedWords(
-    developmentWords,
+    wordBank,
     settings.wordLanguage,
     settings.difficulty,
     [],
@@ -248,8 +312,7 @@ export function SetupScreen({
             </Body>
           ))}
         </View>
-        <Rules t={t} rtl={rtl} />
-        <Body rtl={rtl}>{t('devBank')}</Body>
+        <Rules t={t} rtl={rtl} mode={mode} />
         {needed > available && (
           <Body rtl={rtl}>{t('capacity', { needed, available })}</Body>
         )}
@@ -259,7 +322,7 @@ export function SetupScreen({
           primary
           disabled={!valid.ok || needed > available}
           onPress={() => {
-            if (valid.ok && needed <= available) start(valid.value);
+            if (valid.ok && needed <= available) start?.(valid.value);
           }}
         />
         <Button label={t('back')} onPress={() => setReview(false)} />
@@ -267,8 +330,27 @@ export function SetupScreen({
     );
 
   return (
-    <Page key="setup" title={t('setup')} rtl={rtl}>
-      <Button label={t('back')} onPress={back} />
+    <Page
+      key="setup"
+      title={t(groupEditor ? (initial ? 'editGroup' : 'addGroup') : 'setup')}
+      rtl={rtl}
+    >
+      <Button label={t('back')} onPress={back} disabled={groupEditor?.busy} />
+      {groupEditor && (
+        <TextInput
+          value={groupName}
+          onChangeText={setGroupName}
+          accessibilityLabel={t('groupName')}
+          placeholder={t('groupName')}
+          maxLength={60}
+          style={[
+            styles.button,
+            styles.input,
+            styles.body,
+            rtl ? styles.right : styles.left,
+          ]}
+        />
+      )}
       <Choices
         label={t('mode')}
         options={[
@@ -279,6 +361,7 @@ export function SetupScreen({
         change={setMode}
         rtl={rtl}
       />
+      <Rules t={t} rtl={rtl} mode={mode} />
       {teamsMode && (
         <View style={styles.card}>
           <Choices
@@ -311,6 +394,7 @@ export function SetupScreen({
                 autoCorrect={false}
                 style={[
                   styles.button,
+                  styles.input,
                   styles.body,
                   rtl ? styles.right : styles.left,
                 ]}
@@ -364,7 +448,9 @@ export function SetupScreen({
           label={t('add')}
           disabled={players.length >= (teamsMode ? 24 : 12)}
           onPress={() => {
-            const id = `p${serial.current++}`;
+            let id = `p${serial.current++}`;
+            while (players.some((player) => player.id === id))
+              id = `p${serial.current++}`;
             const target = members
               .slice(0, teamCount)
               .reduce(
@@ -381,68 +467,66 @@ export function SetupScreen({
           }}
         />
       </View>
-      <View style={styles.card}>
-        <Choices
-          label={t('rounds')}
-          options={[1, 2, 3, 4, 5].map(
-            (value) => [value, String(value)] as const,
-          )}
-          value={settings.rounds}
-          change={(value) => setSetting('rounds', value)}
-          rtl={rtl}
-        />
-        <Choices
-          label={t('timer')}
-          options={([30, 60, 90, 120] as const).map(
-            (value) => [value, String(value)] as const,
-          )}
-          value={settings.timerSeconds}
-          change={(value) => setSetting('timerSeconds', value)}
-          rtl={rtl}
-        />
-        <Choices
-          label={t('difficulty')}
-          options={(['easy', 'medium', 'mixed'] as const).map(
-            (value) => [value, t(value)] as const,
-          )}
-          value={settings.difficulty}
-          change={(value) => setSetting('difficulty', value)}
-          rtl={rtl}
-        />
-        <LanguageChoices
-          label={t('language')}
-          value={language}
-          change={(value) => {
-            setLanguage(value);
-            if (!wordLanguageChosen.current) setSetting('wordLanguage', value);
-          }}
-          t={t}
-          rtl={rtl}
-        />
-        <LanguageChoices
-          label={t('wordLanguage')}
-          value={settings.wordLanguage}
-          change={(value) => {
-            wordLanguageChosen.current = true;
-            setSetting('wordLanguage', value);
-          }}
-          t={t}
-          rtl={rtl}
-        />
-        {(['sound', 'vibration'] as const).map((key) => (
+      {!groupEditor && (
+        <View style={styles.card}>
           <Choices
-            key={key}
-            label={t(key)}
-            value={settings[key]}
-            change={(value) => setSetting(key, value)}
+            label={t('rounds')}
+            testID="rounds"
+            options={[1, 2, 3, 4, 5].map(
+              (value) => [value, String(value)] as const,
+            )}
+            value={settings.rounds}
+            change={(value) => setSetting('rounds', value)}
             rtl={rtl}
-            options={[
-              [true, t('on')],
-              [false, t('off')],
-            ]}
           />
-        ))}
-      </View>
+          <Choices
+            label={t('timer')}
+            testID="timer"
+            options={([30, 60, 90, 120] as const).map(
+              (value) => [value, String(value)] as const,
+            )}
+            value={settings.timerSeconds}
+            change={(value) => setSetting('timerSeconds', value)}
+            rtl={rtl}
+          />
+          <Choices
+            label={t('difficulty')}
+            options={(['easy', 'medium', 'mixed'] as const).map(
+              (value) => [value, t(value)] as const,
+            )}
+            value={settings.difficulty}
+            change={(value) => setSetting('difficulty', value)}
+            rtl={rtl}
+          />
+          <LanguageChoices
+            label={t('language')}
+            value={language}
+            change={setLanguage}
+            t={t}
+            rtl={rtl}
+          />
+          <LanguageChoices
+            label={t('wordLanguage')}
+            value={settings.wordLanguage}
+            change={setWordLanguage}
+            t={t}
+            rtl={rtl}
+          />
+          {(['sound', 'vibration'] as const).map((key) => (
+            <Choices
+              key={key}
+              label={t(key)}
+              value={settings[key]}
+              change={(value) => setSetting(key, value)}
+              rtl={rtl}
+              options={[
+                [true, t('on')],
+                [false, t('off')],
+              ]}
+            />
+          ))}
+        </View>
+      )}
       {errors.length > 0 && (
         <Body rtl={rtl}>
           {t(
@@ -455,14 +539,18 @@ export function SetupScreen({
         </Body>
       )}
       <Button
-        label={t('review')}
-        testID="review-order"
+        label={t(groupEditor ? 'saveGroup' : 'review')}
+        testID={groupEditor ? 'save-group' : 'review-order'}
+        disabled={groupEditor && (groupEditor.busy || !groupName.trim())}
         primary
         onPress={() => {
           setErrors(valid.ok ? [] : valid.errors);
-          if (valid.ok) setReview(true);
+          if (!valid.ok) return;
+          if (groupEditor) groupEditor.save(groupName, valid.value);
+          else setReview(true);
         }}
       />
+      {groupEditor?.failed && <Body rtl={rtl}>{t('groupFailed')}</Body>}
     </Page>
   );
 }

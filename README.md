@@ -4,7 +4,7 @@ An offline, in-person drawing and guessing game launching on Android, with iPhon
 
 ## Project status
 
-The Android development app uses Expo, React Native, and TypeScript. The Notebook interface supports setup, play, turn results, and between-turn scores in both modes. T21 covers the final winner screen and replay.
+The Android development app uses Expo, React Native, and TypeScript. The Notebook interface supports complete games in both modes, including tiebreakers, final results, final-turn correction, and replay.
 
 - Team and free-for-all modes
 - English and Egyptian Arabic, with independently selectable interface and word languages
@@ -28,6 +28,8 @@ The Expo SDK 58 TypeScript app lives at the repository root. Run `npm ci`, then 
 
 T08 SQLite sample persistence passed on the Android 17 emulator: a failed transaction rolled back, and the committed snapshot survived force-stop/relaunch. See [T08 evidence](T08-SQLITE-CHECK.md). The app opens the Notebook home. The feasibility probes remain under `src/feasibility`.
 
-The development bank has 16 distinct concepts per language (eight per difficulty). Setup checks that the selected pool can cover the regular rounds before enabling Start game. Active sessions are stored in memory. Full word banks, saved groups, and session recovery are later tasks.
+The bundled bank has 218 Easy and 222 Medium prompts per language. Setup checks that the chosen pool covers the regular rounds. SQLite stores named groups, recent-word history, timer checkpoints, and game results. See [T30–T35 verification](T30-T35-CHECKS.md) for automated recovery checks and pending Egyptian Arabic review.
+
+With the Android development build installed and Metro running on port 8081, run `npm run test:android -- free-for-all`, `npm run test:android -- teams`, `npm run test:android -- lifecycle`, or `npm run test:android -- recovery`. The runner defaults to `emulator-5554` and accepts `ADB` and `ANDROID_SERIAL` environment overrides. Use an empty development save slot.
 
 T09 resizable-emulator checks preserved a running countdown through compact and wide portrait and wide landscape changes; Home paused it. See [T09 evidence](T09-RESIZING-CHECK.md). Physical Fold verification remains open.

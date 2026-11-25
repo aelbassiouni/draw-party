@@ -23,6 +23,7 @@
     },
     "platforms": ["android"],
     "plugins": [
+      "./with-windows-cmake-paths.cjs",
       [
         "expo-build-properties",
         {

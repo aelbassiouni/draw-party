@@ -1,9 +1,12 @@
 import { expect, test } from '@jest/globals';
 import {
   applyCommand,
+  correctFinalTurn,
   createGame,
+  editableResult,
   eligibleGuessers,
   scoreBreakdown,
+  scores,
   type Action,
   type Game,
 } from './engine';
@@ -125,4 +128,67 @@ test('teams rotate their drawers into the complete extra round', () => {
   const last = finish(extra, bank, []);
   expect(last.turn?.slot.drawerId).toBe('d');
   expect(finish(last, bank).winners).toEqual(['red']);
+});
+
+test('a final-turn correction can reopen a tie and replay starts a fresh scorecard', () => {
+  const { game, bank } = scenario(4, true);
+  const final = finish(finish(game, bank, []), bank);
+  expect(final.winners).toEqual(['red']);
+  expect(correctFinalTurn(final, ['a'], bank, () => 0)).toBe(final);
+  const extra = correctFinalTurn(final, [], bank, () => 0);
+  expect(extra.completion).toBeNull();
+  expect(extra.tiebreaker?.participants).toEqual(['red', 'blue']);
+  expect(extra.used.slice(0, final.used.length)).toEqual(final.used);
+  expect(extra.turn?.slot.drawerId).toBe('b');
+  expect(extra.previousResult?.turn.phase).toEqual({
+    kind: 'between',
+    outcome: { kind: 'correct', creditedIds: ['blue'] },
+  });
+  expect(scores(extra)).toEqual({ red: 1, blue: 1 });
+  const replay = createGame('replay', final.setup, bank, () => 0);
+  expect(replay.setup).toBe(final.setup);
+  expect(replay.turn?.slot).toEqual(game.turn?.slot);
+  expect(scores(replay)).toEqual({ red: 0, blue: 0 });
+});
+
+test('a correction can turn a tie into a winner or finish when the new tie exceeds word capacity', () => {
+  const { game, bank } = scenario(7);
+  let state = finish(game, bank, ['b']);
+  state = finish(state, bank);
+  state = finish(state, bank);
+  state = finish(state, bank, ['a']);
+  expect(state.winners).toEqual(['a']);
+  state = correctFinalTurn(state, null, bank, () => 0);
+  expect(state.tiebreaker?.participants).toEqual(['a', 'b']);
+  const prior = editableResult(state);
+  state = correctFinalTurn(state, ['a'], bank, () => 0);
+  expect(state.winners).toEqual(['a']);
+  expect(state.finalTurn?.word).toEqual(prior?.word);
+  state = correctFinalTurn(state, ['c'], bank, () => 0);
+  expect(state.winners).toEqual(ids);
+  expect(state.used).toHaveLength(4);
+  expect(state.tiebreaker).toBeNull();
+});
+
+test('undo can change the tied roster before reveal and then expires at reveal', () => {
+  const { game, bank } = scenario(8);
+  let state = finish(game, bank, ['b']);
+  state = finish(state, bank);
+  state = finish(state, bank);
+  state = finish(state, bank);
+  expect(state.tiebreaker?.participants).toEqual(['a', 'b']);
+  const history = state.recent;
+  state = correctFinalTurn(state, ['c'], bank, () => 0);
+  expect(state.tiebreaker?.participants).toEqual(ids);
+  expect(state.recent).toEqual(history);
+  expect(state.used).toHaveLength(5);
+  if (!state.turn) throw new Error('Missing handoff');
+  state = applyCommand(
+    state,
+    { kind: 'reveal', turnId: state.turn.id, revision: state.revision },
+    bank,
+    () => 0,
+  );
+  expect(editableResult(state)).toBeUndefined();
+  expect(correctFinalTurn(state, null, bank, () => 0)).toBe(state);
 });

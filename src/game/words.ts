@@ -1,4 +1,6 @@
 import type { Difficulty, Language } from './setup';
+import { easy } from './content/easy';
+import { medium } from './content/medium';
 
 type WordDifficulty = Exclude<Difficulty, 'mixed'>;
 export type Word = Readonly<{
@@ -9,7 +11,7 @@ export type Word = Readonly<{
   text: string;
 }>;
 
-// Incomplete bilingual prompts for development and deterministic game tests.
+// Preserve existing concept IDs for saved turns and recent-word history.
 const samples = [
   ['apple', 'easy', 'Apple', 'تفاحة'],
   ['boat', 'easy', 'Boat', 'مركب'],
@@ -29,8 +31,16 @@ const samples = [
   ['read', 'medium', 'Reading a map', 'بيقرا خريطة'],
 ] as const;
 
-export const developmentWords: readonly Word[] = samples.flatMap(
-  ([conceptId, difficulty, en, ar]) =>
+const concepts = [
+  ...samples,
+  ...easy.map(([id, en, ar]) => [id, 'easy', en, ar] as const),
+  ...medium.map(([id, en, ar]) => [id, 'medium', en, ar] as const),
+] as const;
+
+function bilingualWords(
+  entries: readonly (readonly [string, WordDifficulty, string, string])[],
+): readonly Word[] {
+  return entries.flatMap(([conceptId, difficulty, en, ar]) =>
     (['en', 'ar'] as const).map((language) => ({
       id: `${language}-${conceptId}`,
       conceptId,
@@ -38,7 +48,11 @@ export const developmentWords: readonly Word[] = samples.flatMap(
       language,
       text: language === 'en' ? en : ar,
     })),
-);
+  );
+}
+
+export const wordBank = bilingualWords(concepts);
+export const developmentWords = bilingualWords(samples);
 
 export function unusedWords(
   bank: readonly Word[],

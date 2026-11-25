@@ -1,25 +1,40 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import {
   AccessibilityInfo,
   AppState,
   BackHandler,
+  Dimensions,
   Pressable,
   Text,
+  useWindowDimensions,
   Vibration,
   View,
 } from 'react-native';
 import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
 import { useKeepAwake } from 'expo-keep-awake';
 import {
+  correctionContext,
+  editableResult,
   eligibleGuessers,
   remainingAt,
   scores,
+  scoreBreakdown,
   visibleWord,
   type Action,
 } from '../game/engine';
-import type { SessionController } from '../game/session';
+import {
+  CHECKPOINT_INTERVAL_MS,
+  type SessionController,
+} from '../game/session';
+import type { Language } from '../game/setup';
 import { translator } from './copy';
-import { Body, Button, ConfirmDialog, Page, styles } from './notebook';
+import { Body, Button, ConfirmDialog, Heading, Page, styles } from './notebook';
 
 function Wake() {
   useKeepAwake('draw-party-drawing');
@@ -28,12 +43,19 @@ function Wake() {
 
 export function PlayScreen({
   controller,
+  language,
   home,
+  newGame,
 }: {
   controller: SessionController;
+  language: Language;
   home: () => void;
+  newGame: () => void;
 }) {
-  const game = useSyncExternalStore(controller.subscribe, controller.read);
+  const { game, status, frozenMs } = useSyncExternalStore(
+    controller.subscribe,
+    controller.readView,
+  );
   const [now, setNow] = useState(controller.now);
   const [foreground, setForeground] = useState(
     () => AppState.currentState === 'active',
@@ -46,28 +68,40 @@ export function PlayScreen({
   const touching = useRef(false);
   const bounds = useRef({ width: 0, height: 0 });
   const [selection, setSelection] = useState<readonly string[]>([]);
-  const [dialog, setDialog] = useState<'end' | 'exit' | 'reader' | null>(null);
+  const [correcting, setCorrecting] = useState(false);
+  const [dialog, setDialog] = useState<
+    'end' | 'exit' | 'reader' | 'restart' | 'endGame' | null
+  >(null);
   const audio = useAudioPlayer(require('../../assets/timeout-buzzer.wav'), {
     downloadFirst: true,
   });
   const feedbackGeneration = useRef(0);
   const soundReady = useRef(false);
-  const feedbackTurn = useRef<string | null>(null);
-  const t = translator(game.setup.settings.interfaceLanguage);
-  const rtl = game.setup.settings.interfaceLanguage === 'ar';
+  const feedbackTurn = useRef(
+    game.turn?.phase.kind === 'result' &&
+      game.turn.phase.outcome.kind === 'timeout'
+      ? game.turn.id
+      : null,
+  );
+  const t = translator(language);
+  const rtl = language === 'ar';
+  const { width, height, fontScale } = useWindowDimensions();
   const turn = game.turn;
   const phase = turn?.phase;
   const phaseKind = phase?.kind;
-  const running = phaseKind === 'drawing';
+  const running = phaseKind === 'drawing' && status === 'ready';
+  const showDrawingScores = running && width >= 640;
+  const wideDrawing =
+    showDrawingScores && width >= 640 * Math.max(1, fontScale);
   const deadline =
     phase?.kind === 'drawing' ? phase.startedAt + phase.remainingMs : null;
   const timeout = phase?.kind === 'result' && phase.outcome.kind === 'timeout';
   const turnId = turn?.id;
 
-  function hideHold() {
+  const hideHold = useCallback(() => {
     touching.current = false;
     setHeld(false);
-  }
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -95,7 +129,7 @@ export function PlayScreen({
       invalidateFeedback();
       audio.pause();
       Vibration.cancel();
-      controller.dispatch(controller.read(), { kind: 'pause', at });
+      controller.interrupt(at);
     };
     const focus = () => {
       active.current = AppState.currentState === 'active';
@@ -107,6 +141,7 @@ export function PlayScreen({
     });
     const blur = AppState.addEventListener('blur', interrupt);
     const focused = AppState.addEventListener('focus', focus);
+    const resize = Dimensions.addEventListener('change', hideHold);
     const reader = AccessibilityInfo.addEventListener(
       'screenReaderChanged',
       (enabled) => {
@@ -127,38 +162,46 @@ export function PlayScreen({
       change.remove();
       blur.remove();
       focused.remove();
+      resize.remove();
       reader.remove();
     };
-  }, [audio, controller]);
+  }, [audio, controller, hideHold]);
 
   useEffect(() => {
     const back = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (controller.readView().status !== 'ready') return true;
       if (dialog) {
         setDialog(null);
         return true;
       }
+      if (correcting) {
+        setCorrecting(false);
+        return true;
+      }
       if (!controller.read().turn) {
-        home();
+        controller.leave(home);
         return true;
       }
       setPrivateReveal(false);
       setReaderWord(false);
       hideHold();
-      controller.dispatch(controller.read(), {
-        kind: 'pause',
-        at: controller.now(),
-      });
+      controller.interrupt(controller.now());
       setDialog('exit');
       return true;
     });
     return () => back.remove();
-  }, [controller, dialog, home]);
+  }, [controller, correcting, dialog, hideHold, home]);
 
   useEffect(() => {
-    if (deadline === null || !foreground) return;
+    if (!running || deadline === null || !foreground) return;
     let timer: ReturnType<typeof setTimeout>;
     function tick() {
-      if (!active.current || controller.read() !== game) return;
+      if (
+        !active.current ||
+        controller.read() !== game ||
+        controller.readView().status !== 'ready'
+      )
+        return;
       const at = controller.now();
       setNow(at);
       const remaining = remainingAt(game, at);
@@ -171,11 +214,29 @@ export function PlayScreen({
     }
     tick();
     return () => clearTimeout(timer);
-  }, [controller, deadline, foreground, game]);
+  }, [controller, deadline, foreground, game, hideHold, running]);
+
+  useEffect(() => {
+    if (!running || !foreground) return;
+    let timer: ReturnType<typeof setTimeout>;
+    function checkpoint() {
+      if (active.current) controller.checkpoint(controller.now());
+      // Native timers can catch up after a resize. Space out checkpoint attempts.
+      timer = setTimeout(checkpoint, CHECKPOINT_INTERVAL_MS);
+    }
+    timer = setTimeout(checkpoint, CHECKPOINT_INTERVAL_MS);
+    return () => clearTimeout(timer);
+  }, [controller, foreground, game, running]);
 
   const { sound, vibration } = game.setup.settings;
   useEffect(() => {
-    if (!timeout || !foreground || !turnId || feedbackTurn.current === turnId)
+    if (
+      status !== 'ready' ||
+      !timeout ||
+      !foreground ||
+      !turnId ||
+      feedbackTurn.current === turnId
+    )
       return;
     feedbackTurn.current = turnId;
     if (vibration) Vibration.vibrate(450);
@@ -192,14 +253,32 @@ export function PlayScreen({
           audio.play();
       })
       .catch(() => {});
-  }, [audio, controller, foreground, sound, timeout, turnId, vibration]);
+  }, [
+    audio,
+    controller,
+    foreground,
+    sound,
+    status,
+    timeout,
+    turnId,
+    vibration,
+  ]);
+
+  useEffect(
+    () =>
+      controller.subscribe(() => {
+        if (controller.readView().status !== 'ready') hideHold();
+      }),
+    [controller, hideHold],
+  );
 
   const name = (id: string) =>
     game.setup.players.find((player) => player.id === id)?.name ??
     game.setup.teams.find((team) => team.id === id)?.name ??
     id;
-  const board = (
-    <View style={styles.card}>
+  const board = (withHeading = false) => (
+    <View style={styles.card} testID="score-panel">
+      {withHeading && <Heading rtl={rtl}>{t('scoreboard')}</Heading>}
       {Object.entries(scores(game)).map(([id, number]) => (
         <Body key={id} rtl={rtl}>
           {t('points', { name: name(id), number })}
@@ -209,7 +288,13 @@ export function PlayScreen({
   );
 
   function send(action: Action) {
-    if (!active.current || !foreground || controller.read() !== game) return;
+    if (
+      !active.current ||
+      !foreground ||
+      controller.read() !== game ||
+      controller.readView().status !== 'ready'
+    )
+      return;
     hideHold();
     setPrivateReveal(action.kind === 'reveal');
     setReaderWord(false);
@@ -220,25 +305,160 @@ export function PlayScreen({
   const timed = (kind: 'start' | 'resume' | 'pause' | 'guess') =>
     send({ kind, at: controller.now() });
 
-  if (!turn || !phase)
+  if (status !== 'ready')
+    return (
+      <Page title={t(status === 'retry' ? 'saveFailed' : 'saving')} rtl={rtl}>
+        {frozenMs !== undefined && (
+          <Body rtl={rtl}>
+            {t('seconds', { number: Math.ceil(frozenMs / 1000) })}
+          </Body>
+        )}
+        {status === 'retry' && (
+          <Button
+            label={t('retrySave')}
+            testID="retry-save"
+            onPress={() => controller.retry()}
+          />
+        )}
+      </Page>
+    );
+
+  const target = editableResult(game);
+  const editContext = correctionContext(game);
+  function openCorrection() {
+    const outcome = target?.phase;
+    setSelection(
+      outcome && 'outcome' in outcome && outcome.outcome.kind === 'correct'
+        ? eligibleGuessers(editContext).filter(
+            (id) =>
+              outcome.outcome.kind === 'correct' &&
+              outcome.outcome.creditedIds.includes(id),
+          )
+        : [],
+    );
+    setCorrecting(true);
+  }
+
+  if (correcting && target) {
+    const team = target.slot.teamId;
+    const correct = (ids: readonly string[] | null) => {
+      controller.correct(game, ids);
+      setCorrecting(false);
+      setSelection([]);
+    };
+    return (
+      <Page
+        title={t(game.completion ? 'correctFinal' : 'editResult')}
+        rtl={rtl}
+      >
+        <View style={styles.card}>
+          <Body rtl={rtl}>{name(target.slot.drawerId)}</Body>
+          <Body rtl={game.setup.settings.wordLanguage === 'ar'}>
+            {target.word.text}
+          </Body>
+        </View>
+        {team === null ? (
+          <>
+            <Body rtl={rtl}>{t('pick')}</Body>
+            {eligibleGuessers(editContext).map((id) => (
+              <Button
+                key={id}
+                testID={`final-guesser-${id}`}
+                label={name(id)}
+                selected={selection.includes(id)}
+                onPress={() =>
+                  setSelection((previous) =>
+                    previous.includes(id)
+                      ? previous.filter((value) => value !== id)
+                      : [...previous, id],
+                  )
+                }
+              />
+            ))}
+          </>
+        ) : (
+          <Body rtl={rtl}>{t('teamGuess', { name: name(team) })}</Body>
+        )}
+        <Button
+          label={t('confirm')}
+          testID="save-final-correction"
+          disabled={team === null && selection.length === 0}
+          onPress={() => correct(selection)}
+        />
+        <Button
+          label={t('saveNoPoints')}
+          testID="final-no-points"
+          onPress={() => correct(null)}
+        />
+        <Button label={t('cancel')} onPress={() => setCorrecting(false)} />
+      </Page>
+    );
+  }
+
+  if (!turn || !phase) {
     return (
       <Page
         title={t(game.completion === 'exhausted' ? 'exhausted' : 'complete')}
         rtl={rtl}
       >
-        {board}
-        {game.completion !== 'exhausted' && (
-          <Body rtl={rtl}>{t('finishedLater')}</Body>
+        <View testID="final-results" style={styles.card}>
+          {game.winners.length === 1 && (
+            <Body rtl={rtl}>
+              {t('winner', { name: name(game.winners[0]) })}
+            </Body>
+          )}
+          {game.winners.length > 1 && (
+            <>
+              <Body rtl={rtl}>{t('sharedWinners')}</Body>
+              {game.winners.map((id) => (
+                <Body key={id} rtl={rtl}>
+                  {name(id)}
+                </Body>
+              ))}
+            </>
+          )}
+          {game.tiebreaker && (
+            <Body rtl={rtl}>
+              {t('extra', { number: game.tiebreaker.round })}
+            </Body>
+          )}
+          {Object.entries(scoreBreakdown(game)).map(([id, row]) => (
+            <View key={id} testID={`final-score-${id}`}>
+              <Body rtl={rtl}>{name(id)}</Body>
+              <Body rtl={rtl}>{t('breakdown', row)}</Body>
+            </View>
+          ))}
+        </View>
+        {game.finalTurn && (
+          <Button
+            label={t('correctFinal')}
+            testID="correct-final"
+            onPress={openCorrection}
+          />
         )}
-        <Button label={t('home')} onPress={home} />
+        <Button
+          label={t('playAgain')}
+          testID="play-again"
+          primary
+          onPress={() => controller.restart(game)}
+        />
+        <Button
+          label={t('newGame')}
+          testID="new-game"
+          onPress={() => controller.leave(newGame)}
+        />
+        <Button label={t('home')} onPress={() => controller.leave(home)} />
       </Page>
     );
+  }
 
   if (dialog) {
     const [accept, prompt] = (
       {
         reader: ['readerWord', 'readerPrompt'],
-        exit: ['home', 'exitPrompt'],
+        exit: ['saveHome', 'exitPrompt'],
+        restart: ['restart', 'restartPrompt'],
+        endGame: ['endGame', 'endGamePrompt'],
         end: ['noPoints', 'noPointsPrompt'],
       } as const
     )[dialog];
@@ -252,7 +472,9 @@ export function PlayScreen({
           close={() => setDialog(null)}
           confirm={() => {
             setDialog(null);
-            if (dialog === 'exit') home();
+            if (dialog === 'exit') controller.suspend(home);
+            else if (dialog === 'restart') controller.restart(game);
+            else if (dialog === 'endGame') controller.leave(home);
             else if (dialog === 'reader') {
               if (active.current && privateReveal && readerEnabled)
                 setReaderWord(true);
@@ -305,15 +527,18 @@ export function PlayScreen({
     ) : (
       <Body rtl={rtl}>{t('teamGuess', { name: name(team) })}</Body>
     );
+  const round = (
+    <Body rtl={rtl}>
+      {game.tiebreaker
+        ? t('extra', { number: game.tiebreaker.round })
+        : t('round', { number: turn.slot.round })}
+    </Body>
+  );
 
   return (
-    <Page key={phase.kind} title={title} rtl={rtl}>
+    <Page key={phase.kind} title={title} rtl={rtl} wide={wideDrawing}>
       {running && foreground && <Wake />}
-      <Body rtl={rtl}>
-        {game.tiebreaker
-          ? t('extra', { number: game.tiebreaker.round })
-          : t('round', { number: turn.slot.round })}
-      </Body>
+      {!showDrawingScores && round}
       {(phase.kind === 'handoff' || phase.kind === 'reveal') && (
         <>
           <Body rtl={rtl}>{t('shield')}</Body>
@@ -345,82 +570,104 @@ export function PlayScreen({
           <Button label={t('readerWord')} onPress={() => setDialog('reader')} />
         )}
       {running && (
-        <>
-          <Text
-            testID="countdown"
-            accessibilityLabel={t('seconds', { number: seconds })}
-            style={[
-              styles.title,
-              {
-                fontSize: 68,
-                textAlign: 'center',
-                fontVariant: ['tabular-nums'],
-              },
-            ]}
-          >
-            {seconds}
-          </Text>
-          <Button
-            label={t('guessed')}
-            testID="guessed"
-            primary
-            onPress={() => timed('guess')}
-          />
-          <Button
-            label={t('pause')}
-            testID="pause"
-            onPress={() => timed('pause')}
-          />
-          <Pressable
-            testID="hold-word"
-            accessibilityRole="button"
-            accessibilityLabel={t('hold')}
-            accessibilityHint={t('holdHint')}
-            onPress={() => {}}
-            onLongPress={() => {}}
-            onLayout={(event) => {
-              bounds.current = event.nativeEvent.layout;
-            }}
-            onTouchStart={() => {
-              if (
-                !active.current ||
-                controller.read() !== game ||
-                remainingAt(game, controller.now()) === 0
-              )
-                return;
-              touching.current = true;
-              setHeld(true);
-            }}
-            onTouchMove={(event) => {
-              const { locationX, locationY } = event.nativeEvent;
-              if (
-                touching.current &&
-                (locationX < 0 ||
-                  locationY < 0 ||
-                  locationX > bounds.current.width ||
-                  locationY > bounds.current.height)
-              )
-                hideHold();
-            }}
-            onTouchEnd={hideHold}
-            onPressOut={hideHold}
-            onTouchCancel={hideHold}
-            style={styles.button}
-          >
-            <View
-              pointerEvents="none"
-              importantForAccessibility="no-hide-descendants"
+        <View
+          style={{
+            flexDirection: wideDrawing
+              ? rtl
+                ? 'row-reverse'
+                : 'row'
+              : 'column',
+            alignItems: wideDrawing ? 'flex-start' : 'stretch',
+            gap: 14,
+          }}
+        >
+          <View style={[styles.card, wideDrawing && { flex: 3, minWidth: 0 }]}>
+            <Text
+              testID="countdown"
+              accessibilityLabel={t('seconds', { number: seconds })}
+              style={[
+                styles.title,
+                {
+                  fontSize: height < 500 || fontScale > 1.3 ? 52 : 68,
+                  textAlign: 'center',
+                  fontVariant: ['tabular-nums'],
+                },
+              ]}
             >
-              {word === null ? (
-                <Body rtl={rtl}>{t('hold')}</Body>
-              ) : (
-                <Body rtl={game.setup.settings.wordLanguage === 'ar'}>
-                  {word}
-                </Body>
-              )}
+              {seconds}
+            </Text>
+            <View
+              style={wideDrawing ? [styles.row, rtl && styles.rtl] : { gap: 8 }}
+            >
+              <Button
+                label={t('guessed')}
+                testID="guessed"
+                primary
+                onPress={() => timed('guess')}
+              />
+              <Button
+                label={t('pause')}
+                testID="pause"
+                onPress={() => timed('pause')}
+              />
             </View>
-          </Pressable>
-        </>
+            <Pressable
+              testID="hold-word"
+              accessibilityRole="button"
+              accessibilityLabel={t('hold')}
+              accessibilityHint={t('holdHint')}
+              onPress={() => {}}
+              onLongPress={() => {}}
+              onLayout={(event) => {
+                bounds.current = event.nativeEvent.layout;
+              }}
+              onTouchStart={() => {
+                if (
+                  !active.current ||
+                  controller.read() !== game ||
+                  remainingAt(game, controller.now()) === 0
+                )
+                  return;
+                touching.current = true;
+                setHeld(true);
+              }}
+              onTouchMove={(event) => {
+                const { locationX, locationY } = event.nativeEvent;
+                if (
+                  touching.current &&
+                  (locationX < 0 ||
+                    locationY < 0 ||
+                    locationX > bounds.current.width ||
+                    locationY > bounds.current.height)
+                )
+                  hideHold();
+              }}
+              onTouchEnd={hideHold}
+              onPressOut={hideHold}
+              onTouchCancel={hideHold}
+              style={styles.button}
+            >
+              <View
+                pointerEvents="none"
+                importantForAccessibility="no-hide-descendants"
+              >
+                {word === null ? (
+                  <Body rtl={rtl}>{t('hold')}</Body>
+                ) : (
+                  <Body rtl={game.setup.settings.wordLanguage === 'ar'}>
+                    {word}
+                  </Body>
+                )}
+              </View>
+            </Pressable>
+          </View>
+          {showDrawingScores && (
+            <View style={[{ gap: 8 }, wideDrawing && { flex: 2, minWidth: 0 }]}>
+              {round}
+              {board(true)}
+            </View>
+          )}
+        </View>
       )}
       {!running && word !== null && (
         <View
@@ -449,6 +696,9 @@ export function PlayScreen({
             testID="end-without-points"
             onPress={() => setDialog('end')}
           />
+          <Button label={t('restart')} onPress={() => setDialog('restart')} />
+          <Button label={t('endGame')} onPress={() => setDialog('endGame')} />
+          <Button label={t('saveHome')} onPress={() => setDialog('exit')} />
         </>
       )}
       {phase.kind === 'pending' && (
@@ -499,7 +749,7 @@ export function PlayScreen({
       )}
       {phase.kind === 'between' && (
         <>
-          {board}
+          {board()}
           <Button
             label={t('next')}
             testID="next-turn"
@@ -507,6 +757,13 @@ export function PlayScreen({
             onPress={() => send({ kind: 'advance' })}
           />
         </>
+      )}
+      {target && (
+        <Button
+          label={t(phase.kind === 'result' ? 'editResult' : 'undoResult')}
+          testID="edit-result"
+          onPress={openCorrection}
+        />
       )}
     </Page>
   );

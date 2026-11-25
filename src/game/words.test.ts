@@ -30,3 +30,28 @@ test('mixed draws are repeatable, balanced, and exhaust unique concepts', () => 
     exhausted: true,
   });
 });
+
+test('shared difficulty history recycles the oldest eligible word without repeating a current-game concept', () => {
+  const easy = developmentWords.filter(
+    (word) => word.language === 'en' && word.difficulty === 'easy',
+  );
+  const medium = developmentWords.filter(
+    (word) => word.language === 'en' && word.difficulty === 'medium',
+  );
+  const recent = [medium[0], ...easy, ...medium.slice(1)].map(
+    (word) => word.conceptId,
+  );
+  const used = [easy[0]];
+  expect(
+    selectWord(developmentWords, 'en', 'easy', used, () => 0, recent),
+  ).toEqual({ word: easy[1] });
+  expect(
+    selectWord(developmentWords, 'en', 'mixed', used, () => 0, recent),
+  ).toEqual({ word: medium[0] });
+  expect(
+    selectWord(developmentWords, 'en', 'easy', easy, () => 0, recent),
+  ).toEqual({ exhausted: true });
+  expect(
+    selectWord(developmentWords, 'ar', 'easy', [], () => 0, []),
+  ).toMatchObject({ word: { language: 'ar', difficulty: 'easy' } });
+});

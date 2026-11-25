@@ -25,11 +25,11 @@ h3{font-size:20px;line-height:1.4;margin:32px 0 10px;scroll-margin-top:24px;brea
 <a class="source-link" href="IMPLEMENTATION-TASKS.md">View Markdown source</a>
 </aside>
 <main id="content">
-<header><div class="eyebrow">One phone. Paper. Your people.</div><h1>Implementation<br>tasks</h1><p>49 bounded tasks · Android first · Galaxy S23 Ultra</p><p class="meta">Last updated: 2026-11-15</p><span class="badge">In progress · Next T11</span></header>
+<header><div class="eyebrow">One phone. Paper. Your people.</div><h1>Implementation<br>tasks</h1><p>49 bounded tasks · Android first · Galaxy S23 Ultra</p><p class="meta">Last updated: 2026-11-25</p><span class="badge">In progress · T30–T35 checks</span></header>
 <section id="how-to-use-this-backlog" aria-labelledby="how-to-use-this-backlog-title"><h2 id="how-to-use-this-backlog-title">How to use this backlog</h2>
-<p>T01–T10 are complete; M0 is closed and T11 turn rotation is next. 39 of 49 tasks remain. T40 remains blocked by unavailable physical Fold access. Work in the order below unless their dependencies allow another order. Each task is a bounded change or validation session with a concrete completion check. Mark a task done only when its completion check passes; if hardware or access is unavailable, record the blocker and continue only with independent tasks.</p>
+<p>T01–T30 and T32–T33 are implemented. M0 is closed. Use local automated checks and Android emulator testing during implementation. Defer physical-phone testing to final acceptance. Keep physical-device completion checks open until that pass. T40 remains blocked by unavailable physical Fold access.</p>
 <p>Android is the current delivery target. The primary phone is the user's Samsung Galaxy S23 Ultra running Android 17. iPhone implementation is deferred. The product specification remains authoritative; IMPLEMENTATION-PLAN.md explains the proposed technical approach.</p>
-<p>Next task: T11. First checkpoint: T04, when a native development build runs on the S23 Ultra. First complete playable game: T22. A task being written here does not mean it has been implemented or tested. Pure rules and content work may proceed once its dependencies are ready without waiting for T09; native UI integration still requires feasibility checks.</p></section>
+<p>T31, T34, and T35 have open acceptance checks. See <a href="T30-T35-CHECKS.md">T30–T35 verification</a> for implementation, timing measurements, and review status.</p></section>
 <section id="m0-prove-the-android-foundation" aria-labelledby="m0-prove-the-android-foundation-title"><h2 id="m0-prove-the-android-foundation-title">M0 — Prove the Android foundation</h2>
 <h3 id="t01">T01 — Check the development environment</h3>
 <p>Status: Done; environment and native build route verified. See T01-ENVIRONMENT.md and T04-NATIVE-CHECKPOINT.md. Depends on: none.</p>
@@ -87,184 +87,184 @@ h3{font-size:20px;line-height:1.4;margin:32px 0 10px;scroll-margin-top:24px;brea
 </ul></section>
 <section id="m1-build-the-first-complete-playable-game" aria-labelledby="m1-build-the-first-complete-playable-game-title"><h2 id="m1-build-the-first-complete-playable-game-title">M1 — Build the first complete playable game</h2>
 <h3 id="t10">T10 — Validate setup data</h3>
-<p>Status: Done; validated immutable session setup and boundary tests pass. Depends on: T03.</p>
+<p>Status: Done; validated immutable session setup and boundary tests pass in src/game/setup.ts and src/game/setup.test.ts. Depends on: T03.</p>
 <ul>
 <li>Scope: define stable player/team IDs, immutable game settings, player/team limits, name validation, timer/difficulty/round options, and setup-to-session validation.</li>
 <li>Done when: tests accept all supported boundaries and reject invalid rosters/settings without creating a game. Keep display names separate from identity.</li>
 </ul>
 <h3 id="t11">T11 — Implement turn rotation and round counting</h3>
-<p>Status: Not started. Depends on: T10.</p>
+<p>Status: Done. Local tests cover selected order, independent rotation for unequal teams, and completion after round five. Depends on: T10.</p>
 <ul>
 <li>Scope: selected player order, team order, drawer order within teams, fixed advancement, and regular-game completion.</li>
 <li>Done when: tests prove one free-for-all turn per player per round and one team turn per team per round, including unequal teams and the final turn of round five.</li>
 </ul>
 <h3 id="t12">T12 — Add a small development word bank and selector</h3>
-<p>Status: Not started. Depends on: T10.</p>
+<p>Status: Done. Local tests cover deterministic selection, mixed difficulty balance, concept exclusion, and exhaustion. Depends on: T10.</p>
 <ul>
 <li>Scope: stable word/concept IDs, language and difficulty fields, bundled sample prompts, deterministic shuffling, balanced Mixed draws, and current-game exclusion. Label sample content as incomplete.</li>
 <li>Done when: tests show no within-game repeats and predictable selections with a seeded random source; exhaustion is reported explicitly. Full banks are T32–T34.</li>
 </ul>
 <h3 id="t13">T13 — Implement turn phases and legal commands</h3>
-<p>Status: Not started. Depends on: T10, T11, T12.</p>
+<p>Status: Done. Local engine tests verify phase transitions, privacy, same-word resume, and stale-command rejection. Depends on: T10, T11, T12.</p>
 <ul>
 <li>Scope: handoff, private reveal, drawing, pause, pending guess, result, between turns, and completion. Add unique turn IDs and reject illegal/stale commands.</li>
 <li>Done when: tests cover legal transitions, hidden-word phases, same-word resume, and repeated commands without unintended advancement. Keep React and native APIs outside the engine.</li>
 </ul>
 <h3 id="t14">T14 — Implement countdown logic with a fake clock</h3>
-<p>Status: Not started. Depends on: T13.</p>
+<p>Status: Done. Local engine tests use controlled monotonic timestamps across all four durations, including delayed expiry and a guess captured before expiry. Depends on: T13.</p>
 <ul>
 <li>Scope: monotonic elapsed time, remaining milliseconds, pause/resume, zero clamping, and expiry commands. Do not count UI interval ticks as elapsed time.</li>
 <li>Done when: tests cover delayed ticks, repeated expiry, expiry versus Guessed races, all four configured durations, and action-time capture before queued storage work. Pause/Guessed freeze immediately; late callbacks cannot alter captured remaining time or duplicate a result.</li>
 </ul>
 <h3 id="t15">T15 — Implement scoring and result confirmation</h3>
-<p>Status: Not started. Depends on: T13, T14.</p>
+<p>Status: Done. Local engine tests verify team and free-for-all scoring, simultaneous guesses, last-second correction, and no-points outcomes. Depends on: T13, T14.</p>
 <ul>
 <li>Scope: team scoring; eligible free-for-all guessers, including simultaneous first guessers; drawer points; pending confirmation/resume; timeout and last-second correction; violation/no-points results.</li>
 <li>Done when: tests reject ineligible guessers and award each outcome exactly once. Pending guesses keep the word hidden until confirmation.</li>
 </ul>
 <h3 id="t16">T16 — Implement complete tiebreaker rounds</h3>
-<p>Status: Not started. Depends on: T11, T12, T15.</p>
+<p>Status: Done. Tests cover complete extra rounds, narrowing, team drawers, and distinct eligible word capacity with recent-history recycling. Depends on: T11, T12, T15.</p>
 <ul>
 <li>Scope: tied-leader participant sets, complete extra rounds, narrowing tied leaders, no free-for-all drawer points, team rotation, score breakdown, and shared winners when too few unused words remain to complete the next extra round.</li>
 <li>Done when: tests cover ties that persist, ties that narrow, a unique winner after a complete extra round, and capacity checks with zero words, one fewer word than participants, exactly enough words, and insufficient capacity before a later extra round. Capacity uses distinct unused eligible words after recent-history recycling; no partial round starts.</li>
 </ul>
 <h3 id="t17">T17 — Build the Notebook components and home screen</h3>
-<p>Status: Not started. Depends on: T02, T05, T09.</p>
+<p>Status: Done. The Android emulator verified Notebook home at 1.5× system text size. Depends on: T02, T05, T09.</p>
 <ul>
 <li>Scope: shared colors, spacing, typography, paper surfaces, accessible buttons, app navigation, and a home screen linking to setup, groups, and rules. Introduce translation keys/catalogs for all user-facing strings, errors, and accessibility labels from this first production screen; extend them as each later screen is built. Keep unfinished destinations visibly unavailable until implemented.</li>
 <li>Done when: home runs on the phone with usable touch targets and text scaling. Production components are newly implemented rather than copied from the throwaway HTML prototype.</li>
 </ul>
 <h3 id="t18">T18 — Build setup and order selection</h3>
-<p>Status: Not started. Depends on: T10, T17.</p>
+<p>Status: Done. Setup validates immutable rosters, settings, and rotation. The development bank limits which regular schedules can start. Depends on: T10, T17.</p>
 <ul>
 <li>Scope: player entry, both modes, balanced random team assignment, manual team changes, explicit order selection, rules summary, and game settings. Support all roster limits and independent language fields in the model.</li>
 <li>Done when: users can form valid unequal teams or a free-for-all roster, choose who starts, and create the exact validated immutable session shown in setup.</li>
 </ul>
 <h3 id="t19">T19 — Build private reveal and active drawing screens</h3>
-<p>Status: Not started. Depends on: T07, T13, T14, T17, T18.</p>
+<p>Status: Done. Private reveal, the active timer, hold-to-show, lifecycle pause, and resume run through the session controller. Depends on: T07, T13, T14, T17, T18.</p>
 <ul>
 <li>Scope: Pass to player, private reveal, Start drawing, dominant countdown, hold-to-show-word, Guessed, and Pause. Connect through a session controller with an in-memory storage adapter until T24.</li>
 <li>Done when: the same word survives pause/resume and UI rerenders; hidden screens contain no secret text in their rendered or accessibility trees. Lifecycle hiding uses the verified M0 behavior.</li>
 </ul>
 <h3 id="t20">T20 — Build guess confirmation and turn results</h3>
-<p>Status: Not started. Depends on: T15, T19.</p>
+<p>Status: Done. The app supports simultaneous first guesses, timeout correction, a confirmed no-points result, and the between-turn scoreboard. Depends on: T15, T19.</p>
 <ul>
 <li>Scope: eligible guesser selection, simultaneous first guessers, confirm/resume, timeout no-points default, last-second correction, no-points outcome, and between-turn scoreboard.</li>
 <li>Done when: all result paths update scores once, preserve the pending word's privacy, and advance only through the intended action.</li>
 </ul>
 <h3 id="t21">T21 — Build final results and replay setup</h3>
-<p>Status: Not started. Depends on: T16, T20.</p>
+<p>Status: Implemented. Final scores, winners, replay, and final-turn correction are available. Depends on: T16, T20.</p>
 <ul>
 <li>Scope: regular/tiebreaker/total scoreboard, winner/shared winners, tiebreaker labels, Play again, and New game. Keep results visible until the user leaves.</li>
 <li>Done when: complete regular and tiebreaker games reach correct final results; replay resets scores and reuses settings, while new-game setup permits changes. Design completion to allow final-turn correction until explicit departure from results; correction may reopen a tiebreaker. Full persisted undo follows in T28 and word-history persistence in T27.</li>
 </ul>
 <h3 id="t22">T22 — Verify the first complete playable game</h3>
-<p>Status: Not started. Depends on: T18, T19, T20, T21.</p>
+<p>Status: Both complete game modes passed on the Android emulator, including a tiebreaker and a last-second correction. Physical-phone verification is deferred to final acceptance. See T21-T25-CHECKS.md. Depends on: T18, T19, T20, T21.</p>
 <ul>
 <li>Scope: play one complete game in each mode on the phone, plus a deterministic tiebreaker scenario and timeout/last-second scenario. Choose a compatible native runner and automate one deterministic setup-to-final-results flow against the development build using stable test IDs. Document development-bank and in-memory-save limitations. Release signing is not a prerequisite.</li>
 <li>Done when: game flow, rotation, scoring, and results agree with the approved specification all rule tests pass, and the initial native smoke flow passes with useful diagnostics that omit secret words. Save an M1 checkpoint with actual evidence and remaining tasks.</li>
 </ul></section>
 <section id="m2-make-sessions-reliable-and-recoverable" aria-labelledby="m2-make-sessions-reliable-and-recoverable-title"><h2 id="m2-make-sessions-reliable-and-recoverable-title">M2 — Make sessions reliable and recoverable</h2>
 <h3 id="t23">T23 — Add the production SQLite schema and storage boundary</h3>
-<p>Status: Not started. Depends on: T08, T13.</p>
+<p>Status: Done. SQLite migration, round trips, and validation are covered by integration tests. Depends on: T08, T13.</p>
 <ul>
 <li>Scope: versioned settings, groups, one active-session snapshot, prior-result undo data, completed-result retention until explicit departure, and recent-word records. Add transactions, migrations, and validated deserialization.</li>
 <li>Done when: integration tests save/load realistic snapshots and migrate the previous test schema; screens have no direct SQL access.</li>
 </ul>
 <h3 id="t24">T24 — Persist serialized game commands atomically</h3>
-<p>Status: Not started. Depends on: T15, T19, T23.</p>
+<p>Status: Done. Command ordering, idempotent retries, atomic word use, and score commits are covered by automated tests. Depends on: T15, T19, T23.</p>
 <ul>
 <li>Scope: replace in-memory persistence with SQLite, serialize commands/checkpoints, and commit score changes, advancement, and associated word use together. Reserve words durably before reveal. Capture Pause/Guessed/interruption timestamps before queued writes, freeze the UI immediately, and retain pending command IDs for idempotent retry without publishing uncommitted scores.</li>
 <li>Done when: repeated taps and injected transaction failures cannot double-score, lose a confirmed transition, or reveal a replacement word. On stalled or failed saves, keep play suspended with saving/retry status and the original captured time. Resume requires a successful save and explicit user action; a failed save must not restart the old running state.</li>
 </ul>
 <h3 id="t25">T25 — Add timer checkpoints and lifecycle saves</h3>
-<p>Status: Not started. Depends on: T07, T14, T24.</p>
+<p>Status: Implemented. Controlled timing tests and emulator shade, Home, screen sleep, and force-stop checks passed. Physical-phone lifecycle verification is deferred to final acceptance. See T21-T25-CHECKS.md. Depends on: T07, T14, T24.</p>
 <ul>
 <li>Scope: attempt timer checkpoints once per second and at lifecycle transitions; coalesce obsolete checkpoints and prevent stale writes. Suspend play if a checkpoint fails or remains pending at the next scheduled checkpoint, and retain the captured pause time while retrying. Release wake protection on immediate suspension even before persistence completes.</li>
 <li>Done when: tests demonstrate write ordering, immediate action-time freezing under delayed writes, suspension/retry on failed or overdue checkpoints, and recovery from the last successful checkpoint. Measure checkpoint age and unsaved-time recovery under normal, delayed, failed, and terminated writes without claiming a fixed one-second bound. The phone pauses and saves correctly on shade, app switch, and lock.</li>
 </ul>
 <h3 id="t26">T26 — Add home-screen resume and recovery</h3>
-<p>Status: Not started. Depends on: T25.</p>
+<p>Status: Implemented. Depends on: T25.</p>
 <ul>
 <li>Scope: restore every saved phase, reopen interrupted drawing paused with the same word, offer Resume game, confirm before replacement, and handle unreadable save data without silent deletion.</li>
 <li>Done when: termination/relaunch from reveal, drawing, pending guess, and between-turn phases restores the correct roster, scores, word, and committed remaining time; time absent is not deducted.</li>
 </ul>
 <h3 id="t27">T27 — Persist recent-word selection across games</h3>
-<p>Status: Not started. Depends on: T12, T24.</p>
+<p>Status: Implemented. Depends on: T12, T24.</p>
 <ul>
 <li>Scope: shared history for overlapping difficulty pools within each language, oldest-eligible recycling after pool exhaustion, and permanent current-game exclusion. Preserve history through replay/restart/end/new game.</li>
 <li>Done when: deterministic tests prove history exhaustion never reintroduces a current-game word and language/difficulty changes respect the selected eligible pool.</li>
 </ul>
 <h3 id="t28">T28 — Add result editing and undo</h3>
-<p>Status: Not started. Depends on: T20, T24, T27.</p>
+<p>Status: Implemented. Depends on: T20, T24, T27.</p>
 <ul>
 <li>Scope: correct outcome/guessers on results, retain one prior result until the next reveal or explicit departure from final results, roll back advancement and points, and reapply once. Correction flow navigation itself does not expire undo. Recompute completion, winners, tiebreaker eligibility, and word capacity; reopen completed play if needed. Preserve seen-word history, never replay a known word, and retain final results/undo across interruption or relaunch until explicit departure.</li>
 <li>Done when: tests cover edits after Continue, invalidation on next reveal and final-results departure, restored undo availability, and round/tiebreaker boundary corrections. Cover a final winner becoming a tie, a tie becoming a winner, changed tied participants, insufficient next-round word capacity, and cancel/retry/relaunch without duplicate scoring.</li>
 </ul>
 <h3 id="t29">T29 — Complete pause, restart, end, and new-game actions</h3>
-<p>Status: Not started. Depends on: T21, T26, T27.</p>
+<p>Status: Implemented. Depends on: T21, T26, T27.</p>
 <ul>
 <li>Scope: Restart game, End game, End turn without points, resume, and unfinished-game replacement confirmations; retain groups/history and clear or reset only the appropriate session fields.</li>
 <li>Done when: cancel paths leave state intact, confirmed commands implement their distinct effects, and restart preserves setup/order but returns to round one with zero scores.</li>
 </ul>
 <h3 id="t30">T30 — Add saved-group management</h3>
-<p>Status: Not started. Depends on: T18, T23.</p>
+<p>Status: Implemented. Depends on: T18, T23.</p>
 <ul>
 <li>Scope: name/save groups, list/load/edit player names and last team assignments, rename, and confirm deletion. Snapshot loaded setup into active games.</li>
 <li>Done when: saved groups survive relaunch and editing/renaming/deleting one cannot mutate an unfinished game's original roster.</li>
 </ul>
 <h3 id="t31">T31 — Verify interrupted writes and recovery end to end</h3>
-<p>Status: Not started. Depends on: T26, T27, T28, T29, T30.</p>
+<p>Status: Automated checks passed. Android phase checks and device timing are pending after an ADB timeout. Depends on: T26, T27, T28, T29, T30.</p>
 <ul>
 <li>Scope: inject save failures, delayed timer writes, and repeated commands; terminate/relaunch at each meaningful phase. Test recovery of a tiebreaker and a group edited during a saved game.</li>
 <li>Done when: storage integration tests and device checks show no duplicated points, unexplained word changes, or lost committed results. Record the measured abrupt-termination timing tolerance.</li>
 </ul></section>
 <section id="m3-complete-bilingual-content-and-rules" aria-labelledby="m3-complete-bilingual-content-and-rules-title"><h2 id="m3-complete-bilingual-content-and-rules-title">M3 — Complete bilingual content and rules</h2>
 <h3 id="t32">T32 — Produce and validate the English word banks</h3>
-<p>Status: Not started. Depends on: T12.</p>
+<p>Status: Implemented. Depends on: T12.</p>
 <ul>
 <li>Scope: at least 200 Easy and 200 Medium English prompts, stable IDs, normalized duplicate checks, difficulty labels, and family-friendly wording. Store content in reviewable files.</li>
 <li>Done when: automated content checks pass and a content review records suitability for drawing and the intended age range.</li>
 </ul>
 <h3 id="t33">T33 — Produce the Egyptian Arabic word banks</h3>
-<p>Status: Not started. Depends on: T12.</p>
+<p>Status: Implemented. Depends on: T12.</p>
 <ul>
 <li>Scope: at least 200 Easy and 200 Medium Egyptian Arabic prompts in Arabic script, stable concept IDs, normalization, and difficulty labels.</li>
 <li>Done when: count/schema/duplicate checks pass and all prompts are prepared for a native Egyptian Arabic review. This task alone does not establish naturalness.</li>
 </ul>
 <h3 id="t34">T34 — Review and integrate the complete word banks</h3>
-<p>Status: Not started. Depends on: T27, T32, T33.</p>
+<p>Status: Integrated and validated. Blocked on independent native Egyptian Arabic review. Depends on: T27, T32, T33.</p>
 <ul>
 <li>Scope: obtain Egyptian Arabic naturalness/family-suitability review, resolve flagged prompts, integrate all banks, and remove development-bank limitations from production.</li>
 <li>Done when: at least 800 prompts pass validation, reviewer feedback is resolved, all difficulty/language pools work, and a maximum-length regular game has enough unused words. If no reviewer is available, record that blocker explicitly.</li>
 </ul>
 <h3 id="t35">T35 — Translate the complete interface</h3>
-<p>Status: Not started. Depends on: T05, T21, T29, T30.</p>
+<p>Status: Translated and covered by completeness checks. Native review and physical-phone acceptance remain open. Depends on: T05, T21, T29, T30.</p>
 <ul>
 <li>Scope: complete and review English/Egyptian Arabic translations for the keys introduced from T17 onward, including screen text, confirmations, validation errors, accessibility labels, and timer announcements. Audit for remaining hardcoded user-facing strings.</li>
 <li>Done when: every current screen has both translations and a completeness check catches missing keys. Verify natural Egyptian Arabic and mixed-script names on the phone.</li>
 </ul>
 <h3 id="t36">T36 — Finish independent language preferences</h3>
-<p>Status: Not started. Depends on: T26, T34, T35.</p>
+<p>Status: Implemented. Automated recovery and restart checks cover all four language combinations. Android UI verification remains open. Depends on: T26, T34, T35.</p>
 <ul>
 <li>Scope: persist interface preference, default new setup's word language appropriately, preserve explicit word selection, and keep active-session word language fixed.</li>
 <li>Done when: all four interface/word-language combinations work through setup, play, and restart, without switching banks or losing saved state unexpectedly.</li>
 </ul>
 <h3 id="t37">T37 — Add How to play and first-game guidance</h3>
-<p>Status: Not started. Depends on: T18, T23, T35.</p>
+<p>Status: Implemented. Skipping the overview reached the Android emulator handoff. Native Egyptian Arabic copy review remains open. Depends on: T18, T23, T35.</p>
 <ul>
 <li>Scope: bilingual full rules from home, mode-specific setup summaries, and a short skippable first-game overview. Include drawing restrictions, answer strictness, and group-judged correctness/violations.</li>
 <li>Done when: first-game guidance can be skipped and does not recur after completion, full rules remain accessible, and explanations match actual team/free-for-all behavior.</li>
 </ul></section>
 <section id="m4-finish-layouts-and-device-acceptance" aria-labelledby="m4-finish-layouts-and-device-acceptance-title"><h2 id="m4-finish-layouts-and-device-acceptance-title">M4 — Finish layouts and device acceptance</h2>
 <h3 id="t38">T38 — Polish compact Notebook screens</h3>
-<p>Status: Not started. Depends on: T31, T36, T37.</p>
+<p>Status: Implemented. Narrow viewport and large-text Android verification remain open. S23 Ultra verification is deferred to final acceptance. Depends on: T31, T36, T37.</p>
 <ul>
 <li>Scope: consistent paper-and-marker styling across home/setup/groups/game/results; narrow portrait screens, safe areas, keyboard behavior, and large text. Bundle licensed fonts/assets as needed.</li>
 <li>Done when: no clipped names, inaccessible actions, or horizontal overflow on narrow and S23 Ultra viewports; active drawing emphasizes timer/current turn and between-turn screens show the full scoreboard.</li>
 </ul>
 <h3 id="t39">T39 — Build wide and unfolded layouts</h3>
-<p>Status: Not started. Depends on: T09, T38.</p>
+<p>Status: Implemented. Android emulator viewport changes and rotation preserved the running turn, and Home paused it. Wide-layout visual checks remain open. Depends on: T09, T38.</p>
 <ul>
 <li>Scope: timer beside scores/turn information on wide screens, portrait/landscape composition, and text-scale-aware stacking. Keep private screens private and session state independent of layout.</li>
 <li>Done when: emulator resize/rotation preserves scores, drawer, word, and timer; wide content is deliberately composed and no secret appears in the score panel.</li>

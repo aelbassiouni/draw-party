@@ -32,6 +32,11 @@ export type Game = Readonly<{
     participants: readonly string[];
   }> | null;
   winners: readonly string[];
+  finalTurn?: ActiveTurn;
+  previousResult?: Readonly<{
+    turn: ActiveTurn;
+    tiebreaker: Game['tiebreaker'];
+  }>;
   recent: readonly string[];
   used: readonly Word[];
   results: readonly Outcome[];
@@ -165,7 +170,7 @@ export function visibleWord(
 }
 
 export function eligibleGuessers(game: Game): readonly string[] {
-  const slot = game.turn?.slot;
+  const slot = (game.turn ?? game.finalTurn)?.slot;
   if (!slot) return [];
   const roster =
     slot.teamId === null
@@ -204,6 +209,76 @@ export function scores(game: Game): Readonly<Record<string, number>> {
   );
 }
 
+export function editableResult(game: Game): ActiveTurn | undefined {
+  const kind = game.turn?.phase.kind;
+  if (kind === 'result' || kind === 'between') return game.turn ?? undefined;
+  return game.finalTurn ?? game.previousResult?.turn;
+}
+
+export function correctionContext(game: Game): Game {
+  return {
+    ...game,
+    turn: editableResult(game) ?? null,
+    tiebreaker: game.previousResult
+      ? game.previousResult.tiebreaker
+      : game.tiebreaker,
+  };
+}
+
+export function correctFinalTurn(
+  game: Game,
+  guesserIds: readonly string[] | null,
+  bank: readonly Word[],
+  random: () => number,
+): Game {
+  const turn = editableResult(game);
+  if (!turn || !('outcome' in turn.phase)) return game;
+  const context = correctionContext(game);
+  let outcome: Outcome = { kind: 'violation' };
+  if (guesserIds !== null) {
+    const phase = applyCommand(
+      {
+        ...context,
+        turn: { ...turn, phase: { kind: 'pending', remainingMs: 0 } },
+      },
+      { turnId: turn.id, revision: game.revision, kind: 'confirm', guesserIds },
+      bank,
+      random,
+    ).turn?.phase;
+    if (phase?.kind !== 'result') return game;
+    outcome = phase.outcome;
+  }
+
+  const correctedTurn = { ...turn, phase: { kind: turn.phase.kind, outcome } };
+  const {
+    finalTurn: _finalTurn,
+    previousResult: _previousResult,
+    ...rest
+  } = context;
+  const corrected: Game = {
+    ...rest,
+    revision: game.revision + 1,
+    completion: null,
+    winners: [],
+    turn: correctedTurn,
+    results:
+      turn.phase.kind === 'between'
+        ? [...game.results.slice(0, turn.slot.index), outcome]
+        : game.results,
+    // A handoff only reserved its word. The corrected turn and all revealed
+    // words stay excluded even when the next round changes.
+    used: game.used.slice(0, turn.slot.index + 1),
+  };
+  if (game.turn === turn) return corrected;
+  const next = openTurn(corrected, turn.slot.index + 1, bank, random);
+  return next.completion
+    ? { ...next, finalTurn: correctedTurn }
+    : {
+        ...next,
+        previousResult: { turn: correctedTurn, tiebreaker: context.tiebreaker },
+      };
+}
+
 /** Capture timed action timestamps at input, before queueing persistence. */
 export function applyCommand(
   game: Game,
@@ -225,10 +300,18 @@ export function applyCommand(
     return game;
 
   switch (command.kind) {
-    case 'reveal':
-      return phase.kind === 'handoff'
-        ? next({ ...phase, kind: 'reveal' })
-        : game;
+    case 'reveal': {
+      if (phase.kind !== 'handoff') return game;
+      const revealed = next({ ...phase, kind: 'reveal' });
+      const { previousResult: _previousResult, ...rest } = revealed;
+      return {
+        ...rest,
+        recent: [
+          ...rest.recent.filter((id) => id !== turn.word.conceptId),
+          turn.word.conceptId,
+        ],
+      };
+    }
     case 'start':
     case 'resume':
       if (
@@ -294,13 +377,20 @@ export function applyCommand(
         ...next({ kind: 'between', outcome: phase.outcome }),
         results: [...game.results, phase.outcome],
       };
-    case 'advance':
+    case 'advance': {
       if (phase.kind !== 'between') return game;
-      return openTurn(
+      const advanced = openTurn(
         { ...game, revision: game.revision + 1 },
         turn.slot.index + 1,
         bank,
         random,
       );
+      return advanced.completion
+        ? { ...advanced, finalTurn: turn }
+        : {
+            ...advanced,
+            previousResult: { turn, tiebreaker: game.tiebreaker },
+          };
+    }
   }
 }
