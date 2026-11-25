@@ -1,12 +1,12 @@
 # Draw Party checkpoint
 
-Saved: 2026-11-15. T10 setup validation passed; M0 closed.
+Saved November 25, 2026 after implementing T16–T20.
 
 ## Resume here
 
-T01–T15 are complete. Next: T16 tiebreaker rounds (see IMPLEMENTATION-TASKS.md). Use the Android emulator and local automated checks during development. Physical-phone testing is deferred to final acceptance. Physical Fold access remains unavailable for T40. Android first; iPhone deferred.
+T01–T20 are implemented. T21 covers final results and replay setup. Use the Android emulator and local automated checks during development. Physical-phone testing is deferred to final acceptance. Physical Fold access remains unavailable for T40. Android comes first, with iPhone deferred.
 
-Current app entry is the development interruption/resize probe, not production gameplay. Production game work begins after remaining feasibility checks. T22 is the first complete playable-game checkpoint.
+The app opens the Notebook home. T22 is the first complete playable-game checkpoint.
 
 ## Authoritative documents
 
@@ -38,6 +38,12 @@ T11–T12: The regular turn schedule respects configured order and cycles team d
 
 T13–T15: The platform-independent engine in src/game/engine.ts implements regular turn phases, stale-command rejection, private-word visibility, elapsed-time countdowns, and result scoring. Timed commands carry the monotonic timestamp captured at input. The future session controller must apply input in capture order and publish pause/guess state immediately before awaiting persistence. The engine reaches regular completion or reports word exhaustion. T16 adds tiebreakers and T19 connects drawing to the app. Local checks passed with 5 suites and 19 tests.
 
+T16: Complete tiebreaker rounds use tied leaders in their configured order, rotate team drawers, and count only distinct unused eligible concepts. Recent history can be recycled, and insufficient capacity yields shared winners. Score breakdowns preserve regular, tiebreaker, and total points.
+
+T17–T20: The Notebook home, rules, setup, order review, private reveal, timed drawing, guess confirmation, and between-turn scoreboard form the Android development flow. Interface and word languages are independent. The in-memory controller commits actions in input order. The development bank has 16 concepts per language and setup refuses regular schedules larger than the eligible pool. Private reading is available during reveal through explicit screen-reader opt-in with headphones or Braille guidance.
+
+Verification: `npm run check` passed with 25 tests. On the Android 17 emulator, home worked at 1.5× text size and switched to Arabic. The free-for-all flow covered the chosen order, notification-shade pause and explicit resume, hold/release and drag-out, simultaneous first guesses, timeout correction, a confirmed no-points turn, and scoreboard advancement. A 3-vs-2 team game verified the chosen starting team and correct team scoring.
+
 ## User preferences and open acceptance
 
 The user delegates TalkBack testing to the agent; do not ask the user to repeat it. Use emulator first, with physical hardware checks where needed. No Fold access: keep T40/release verification gap open. Egyptian Arabic content review remains T34/T35; release identity/signing remains T45. Do not add recent-apps preview protection; the user declined it.
@@ -67,8 +73,8 @@ index.ts imports Expo runtime initialization but registers the native root direc
 
 ## Outstanding limits
 
-No production gameplay, production session persistence, full localization, released APK, store submission or physical Fold acceptance. Dependency audit findings remain documented in T03-CHECKS.md (28 entries at T06: 1 low, 27 moderate); no forced incompatible downgrade applied. Full release security/device acceptance remains later work.
+Production session persistence, the final results and replay UI, full word banks and localization review, released APK, store submission, and physical Fold acceptance remain open. Dependency audit findings remain documented in T03-CHECKS.md (28 entries at T06: 1 low, 27 moderate); no forced incompatible downgrade applied. Full release security/device acceptance remains later work.
 
 ## Git handoff
 
-Save this checkpoint in a local commit with the completed T08–T10 work and updated task documents. Generated native directories, credentials, dependencies and local diagnostics stay ignored. No push is implied by this checkpoint.
+Generated native directories, credentials, dependencies, and local diagnostics stay ignored.

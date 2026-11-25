@@ -1,0 +1,140 @@
+const copy = {
+  title: ['Draw Party', 'حفلة الرسم'],
+  home: ['Home', 'الرئيسية'],
+  setup: ['Set up a game', 'جهّز لعبة'],
+  groupsLater: ['Saved groups · Coming later', 'المجموعات المحفوظة · قريباً'],
+  mode: ['Game mode', 'نوع اللعب'],
+  rules: ['Rules', 'القواعد'],
+  ruleDraw: [
+    'Draw on paper. Pass the phone to the drawer, who checks the word privately and starts the timer.',
+    'ارسم على الورق. ناول الهاتف للرسام ليشوف الكلمة لوحده ويشغّل المؤقت.',
+  ],
+  ruleScore: [
+    'In teams, the drawing team scores for a correct guess. In free-for-all, the drawer and everyone tied for first guess score.',
+    'في الفرق، فريق الرسام ياخد نقطة لو خمّن صح. في اللعب الفردي، الرسام وكل اللي خمّنوا صح في نفس اللحظة الأولى ياخدوا نقطة.',
+  ],
+  ruleTie: [
+    'Tied leaders play complete extra rounds while enough words remain. Free-for-all drawers do not score in extra rounds.',
+    'المتصدرون المتعادلون يلعبوا جولات إضافية كاملة طالما فيه كلمات كفاية. في الفردي الرسام ما بياخدش نقطة في الجولات الإضافية.',
+  ],
+  language: ['Interface language', 'لغة الواجهة'],
+  wordLanguage: ['Word language', 'لغة الكلمات'],
+  en: ['English', 'الإنجليزية'],
+  ar: ['العربية', 'العربية'],
+  players: ['Players', 'اللاعبون'],
+  teams: ['Teams', 'الفرق'],
+  freeForAll: ['Free-for-all', 'لعب فردي'],
+  team: ['Team {number}', 'فريق {number}'],
+  player: ['Player {number}', 'لاعب {number}'],
+  add: ['Add player', 'أضف لاعب'],
+  remove: ['Remove player {number}', 'احذف اللاعب {number}'],
+  assignment: ['Team for {name}', 'فريق {name}'],
+  shuffle: ['Randomize balanced teams', 'وزّع الفرق بالتساوي عشوائياً'],
+  order: ['Turn order', 'ترتيب الأدوار'],
+  drawerOrder: ['Drawer order for {name}', 'ترتيب الرسامين في {name}'],
+  earlier: ['Move {name} earlier', 'قدّم {name} في الترتيب'],
+  first: ['{name} starts', '{name} يبدأ'],
+  rounds: ['Rounds', 'الجولات'],
+  timer: ['Seconds per turn', 'ثواني لكل دور'],
+  difficulty: ['Difficulty', 'الصعوبة'],
+  easy: ['Easy', 'سهل'],
+  medium: ['Medium', 'متوسط'],
+  mixed: ['Mixed', 'متنوع'],
+  sound: ['Timeout sound', 'صوت انتهاء الوقت'],
+  vibration: ['Timeout vibration', 'اهتزاز انتهاء الوقت'],
+  on: ['On', 'تشغيل'],
+  off: ['Off', 'إيقاف'],
+  settingValue: ['{name} · {value}', '{name} · {value}'],
+  review: ['Review order', 'راجع الترتيب'],
+  play: ['Start game', 'ابدأ اللعبة'],
+  back: ['Back', 'رجوع'],
+  devBank: [
+    'Development word bank. Available words depend on language and difficulty.',
+    'بنك كلمات تجريبي. عدد الكلمات المتاحة يعتمد على اللغة والصعوبة.',
+  ],
+  capacity: [
+    'This game needs {needed} distinct words. The selected pool has {available}.',
+    'اللعبة تحتاج {needed} كلمة مختلفة. المجموعة المختارة فيها {available}.',
+  ],
+  rosterError: [
+    'Enter a name for every player (1–40 characters). Free-for-all needs 3–12 players. Each team needs 2–6 players.',
+    'اكتب اسم لكل لاعب (١–٤٠ حرف). الفردي يحتاج ٣–١٢ لاعب. كل فريق يحتاج ٢–٦ لاعبين.',
+  ],
+  settingsError: [
+    'Check the roster, order and settings.',
+    'راجع الأسماء والترتيب والإعدادات.',
+  ],
+  pass: ['Pass to {name}', 'ناول الهاتف لـ {name}'],
+  round: ['Round {number}', 'جولة {number}'],
+  extra: ['Tiebreaker round {number}', 'جولة كسر التعادل {number}'],
+  reveal: ['Reveal word privately', 'اكشف الكلمة لنفسك'],
+  shield: [
+    'Shield the screen from other players.',
+    'خبّي الشاشة عن باقي اللاعبين.',
+  ],
+  readerWord: [
+    'Enable screen reader access to the word',
+    'اسمح لقارئ الشاشة بقراءة الكلمة',
+  ],
+  readerPrompt: [
+    'Use headphones or a Braille display. Your screen reader may speak the word aloud if its audio is public.',
+    'استخدم سماعات أو شاشة برايل. قارئ الشاشة ممكن ينطق الكلمة بصوت مسموع لو الصوت على مكبر الصوت.',
+  ],
+  start: ['Start drawing', 'ابدأ الرسم'],
+  hold: ['Hold to show word', 'اضغط باستمرار لرؤية الكلمة'],
+  holdHint: [
+    'With TalkBack, double-tap and hold. Release or move away to hide the word.',
+    'مع TalkBack، انقر مرتين واستمر في الضغط. ارفع إصبعك أو حرّكه بعيداً لإخفاء الكلمة.',
+  ],
+  seconds: ['{number} seconds remaining', 'متبقي {number} ثانية'],
+  guessed: ['Guessed!', 'خمّنوا صح!'],
+  pause: ['Pause', 'إيقاف مؤقت'],
+  paused: ['Paused', 'اللعبة متوقفة مؤقتاً'],
+  resume: ['Resume drawing', 'كمّل الرسم'],
+  noPoints: ['End turn without points', 'أنهِ الدور بدون نقاط'],
+  noPointsPrompt: [
+    'End this turn without awarding points?',
+    'تنهي الدور من غير ما تحسب نقاط؟',
+  ],
+  exitPrompt: [
+    'Leave this game and return home?',
+    'تخرج من اللعبة وترجع للرئيسية؟',
+  ],
+  cancel: ['Cancel', 'إلغاء'],
+  pending: ['Confirm the guess', 'أكّد التخمين'],
+  pick: [
+    'Select everyone who guessed correctly at the same time first.',
+    'اختار كل اللي خمّنوا صح أول مرة في نفس اللحظة.',
+  ],
+  teamGuess: ['Did {name} guess correctly?', 'هل {name} خمّن صح؟'],
+  confirm: ['Confirm correct guess', 'أكّد الإجابة الصحيحة'],
+  corrected: ['Count last-second guess', 'احسب تخمين آخر ثانية'],
+  timeout: ['Time’s up · No points', 'الوقت انتهى · بدون نقاط'],
+  violation: ['Turn ended · No points', 'الدور انتهى · بدون نقاط'],
+  correct: ['Correct guess', 'تخمين صحيح'],
+  awarded: ['{name} gets one point', 'نقطة لـ {name}'],
+  continue: ['Show scoreboard', 'اعرض النتيجة'],
+  scoreboard: ['Scoreboard', 'النتيجة'],
+  points: ['{name} · {number}', '{name} · {number}'],
+  next: ['Next turn', 'الدور التالي'],
+  complete: ['Game complete', 'اللعبة انتهت'],
+  exhausted: ['The game ran out of words.', 'الكلمات خلصت.'],
+  finishedLater: [
+    'Final results will be available in a later update.',
+    'النتيجة النهائية هتكون متاحة في تحديث لاحق.',
+  ],
+} as const;
+
+export type Key = keyof typeof copy;
+export type Translate = (
+  key: Key,
+  values?: Record<string, string | number>,
+) => string;
+
+export function translator(language: 'en' | 'ar'): Translate {
+  return (key, values) =>
+    copy[key][language === 'ar' ? 1 : 0].replace(
+      /\{(\w+)\}/g,
+      (match, name: string) => String(values?.[name] ?? match),
+    );
+}

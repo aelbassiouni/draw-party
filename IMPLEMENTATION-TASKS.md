@@ -121,35 +121,35 @@ Status: Done. Local engine tests verify team and free-for-all scoring, simultane
 
 ### T16 — Implement complete tiebreaker rounds
 
-Status: Not started. Depends on: T11, T12, T15.
+Status: Done. Tests cover complete extra rounds, narrowing, team drawers, and distinct eligible word capacity with recent-history recycling. Depends on: T11, T12, T15.
 
 - Scope: tied-leader participant sets, complete extra rounds, narrowing tied leaders, no free-for-all drawer points, team rotation, score breakdown, and shared winners when too few unused words remain to complete the next extra round.
 - Done when: tests cover ties that persist, ties that narrow, a unique winner after a complete extra round, and capacity checks with zero words, one fewer word than participants, exactly enough words, and insufficient capacity before a later extra round. Capacity uses distinct unused eligible words after recent-history recycling; no partial round starts.
 
 ### T17 — Build the Notebook components and home screen
 
-Status: Not started. Depends on: T02, T05, T09.
+Status: Done. The Android emulator verified Notebook home at 1.5× system text size. Depends on: T02, T05, T09.
 
 - Scope: shared colors, spacing, typography, paper surfaces, accessible buttons, app navigation, and a home screen linking to setup, groups, and rules. Introduce translation keys/catalogs for all user-facing strings, errors, and accessibility labels from this first production screen; extend them as each later screen is built. Keep unfinished destinations visibly unavailable until implemented.
 - Done when: home runs on the phone with usable touch targets and text scaling. Production components are newly implemented rather than copied from the throwaway HTML prototype.
 
 ### T18 — Build setup and order selection
 
-Status: Not started. Depends on: T10, T17.
+Status: Done. Setup validates immutable rosters, settings, and rotation. The development bank limits which regular schedules can start. Depends on: T10, T17.
 
 - Scope: player entry, both modes, balanced random team assignment, manual team changes, explicit order selection, rules summary, and game settings. Support all roster limits and independent language fields in the model.
 - Done when: users can form valid unequal teams or a free-for-all roster, choose who starts, and create the exact validated immutable session shown in setup.
 
 ### T19 — Build private reveal and active drawing screens
 
-Status: Not started. Depends on: T07, T13, T14, T17, T18.
+Status: Done. Private reveal, the active timer, hold-to-show, lifecycle pause, and resume run through an in-memory session controller. Depends on: T07, T13, T14, T17, T18.
 
 - Scope: Pass to player, private reveal, Start drawing, dominant countdown, hold-to-show-word, Guessed, and Pause. Connect through a session controller with an in-memory storage adapter until T24.
 - Done when: the same word survives pause/resume and UI rerenders; hidden screens contain no secret text in their rendered or accessibility trees. Lifecycle hiding uses the verified M0 behavior.
 
 ### T20 — Build guess confirmation and turn results
 
-Status: Not started. Depends on: T15, T19.
+Status: Done. The app supports simultaneous first guesses, timeout correction, a confirmed no-points result, and the between-turn scoreboard. Depends on: T15, T19.
 
 - Scope: eligible guesser selection, simultaneous first guessers, confirm/resume, timeout no-points default, last-second correction, no-points outcome, and between-turn scoreboard.
 - Done when: all result paths update scores once, preserve the pending word's privacy, and advance only through the intended action.

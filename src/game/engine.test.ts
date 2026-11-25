@@ -134,7 +134,7 @@ test('timeout defaults to zero and can count a last-second team guess once', () 
     send(send(pending, { kind: 'confirm' }), { kind: 'continue' }),
     { kind: 'advance' },
   );
-  expect(final.completion).toBe('regular');
-  expect(final.turn).toBeNull();
+  expect(final.completion).toBeNull();
+  expect(final.turn?.slot.drawerId).toBe('b');
   expect(scores(final)).toEqual({ red: 1, blue: 1 });
 });

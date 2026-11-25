@@ -4,7 +4,7 @@ An offline, in-person drawing and guessing game launching on Android, with iPhon
 
 ## Project status
 
-Android feasibility implementation is underway using Expo/React Native and TypeScript. T01–T10 are complete; the Android feasibility milestone is closed. T11 turn rotation is next. Production gameplay has not been built.
+The Android development app uses Expo, React Native, and TypeScript. The Notebook interface supports setup, play, turn results, and between-turn scores in both modes. T21 covers the final winner screen and replay.
 
 - Team and free-for-all modes
 - English and Egyptian Arabic, with independently selectable interface and word languages
@@ -26,6 +26,8 @@ Android feasibility implementation is underway using Expo/React Native and TypeS
 
 The Expo SDK 58 TypeScript app lives at the repository root. Run `npm ci`, then `npm run check`. Use `npm run android` and `npm start` for native development; the local Windows build route and emulator settings are in [T04](T04-NATIVE-CHECKPOINT.md).
 
-T08 SQLite sample persistence passed on the Android 17 emulator: a failed transaction rolled back, and the committed snapshot survived force-stop/relaunch. See [T08 evidence](T08-SQLITE-CHECK.md). The app currently opens the interruption/resize development probe. Production gameplay and session recovery are later tasks.
+T08 SQLite sample persistence passed on the Android 17 emulator: a failed transaction rolled back, and the committed snapshot survived force-stop/relaunch. See [T08 evidence](T08-SQLITE-CHECK.md). The app opens the Notebook home. The feasibility probes remain under `src/feasibility`.
+
+The development bank has 16 distinct concepts per language (eight per difficulty). Setup checks that the selected pool can cover the regular rounds before enabling Start game. Active sessions are stored in memory. Full word banks, saved groups, and session recovery are later tasks.
 
 T09 resizable-emulator checks preserved a running countdown through compact and wide portrait and wide landscape changes; Home paused it. See [T09 evidence](T09-RESIZING-CHECK.md). Physical Fold verification remains open.
